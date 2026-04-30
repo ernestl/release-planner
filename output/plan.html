@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>snapd 26.10 Release Plan</title>
+  <style>
+    :root {
+      --bg: #f6f7f4;
+      --panel: #ffffff;
+      --text: #1f252d;
+      --muted: #5f6670;
+      --border: #d4dbe2;
+      --accent: #0f766e;
+    }
+
+    body {
+      margin: 0;
+      font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+      background: radial-gradient(circle at 14% 8%, #eaf2ee 0, var(--bg) 36%);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 12px 30px rgba(16, 24, 40, 0.06);
+      padding: 1.25rem;
+    }
+
+    h1, h2 {
+      margin: 0 0 0.75rem;
+      letter-spacing: 0.012em;
+    }
+
+    .meta {
+      color: var(--muted);
+      margin-bottom: 1rem;
+      font-size: 0.95rem;
+    }
+
+    .timeline-wrap {
+      overflow-x: auto;
+      border-top: 1px solid var(--border);
+      padding-top: 1rem;
+      padding-bottom: 0.5rem;
+    }
+
+    .timeline-svg {
+      display: block;
+      background: linear-gradient(180deg, #ffffff 0%, #f9fbfd 100%);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .row-label-bg {
+      fill: #eef2f6;
+    }
+
+    .row-label-text {
+      fill: #2d3845;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .month-cell {
+      fill: #e8eff7;
+      stroke: #cbd7e5;
+      stroke-width: 1;
+    }
+
+    .month-text {
+      fill: #223142;
+      font-size: 12px;
+      font-weight: 700;
+      text-anchor: middle;
+    }
+
+    .week-cell {
+      fill: #ffffff;
+      stroke: #dde4ec;
+      stroke-width: 1;
+    }
+
+    .week-text {
+      fill: #4a5562;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .week-text-top {
+      text-anchor: middle;
+    }
+
+    .pulse-cell {
+      fill: #d9efe9;
+      stroke: #a9d7cc;
+      stroke-width: 1;
+    }
+
+    .pulse-text {
+      fill: #145a4d;
+      font-size: 12px;
+      font-weight: 700;
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+
+    .week-divider {
+      stroke: #e9eef4;
+      stroke-width: 1;
+    }
+
+    .lane-band {
+      fill: #f6f9fc;
+      stroke: #dce5ef;
+      stroke-width: 1;
+    }
+
+    .lane-name {
+      fill: #1f2937;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .item {
+      stroke-width: 1;
+      fill-opacity: 0.96;
+    }
+
+    .item.base {
+      fill: #5f6975;
+      stroke: #4b5563;
+    }
+
+    .item.sprint {
+      fill: #0f74a8;
+      stroke: #075985;
+    }
+
+    .item.release {
+      fill: #6d28d9;
+      stroke: #5b21b6;
+    }
+
+    .item.holiday {
+      fill: #b66516;
+      stroke: #8a4a0f;
+    }
+
+    .milestone-deadline {
+      fill: #be123c;
+      stroke: #9f1239;
+      stroke-width: 1.5;
+    }
+
+    .item-label-inside {
+      fill: #ffffff;
+      font-size: 12px;
+      font-weight: 700;
+      pointer-events: none;
+    }
+
+    .item-label-centered {
+      text-anchor: middle;
+    }
+
+    .deadline-label {
+      fill: #7f1d1d;
+    }
+
+    .link-line {
+      stroke-width: 1.8;
+      stroke-dasharray: 4 3;
+      fill: none;
+      opacity: 0.9;
+    }
+
+
+    ul {
+      margin-top: 0.25rem;
+    }
+
+    .badge {
+      display: inline-block;
+      background: #e7f3ee;
+      color: var(--accent);
+      border: 1px solid #cce7dd;
+      border-radius: 999px;
+      padding: 0.1rem 0.55rem;
+      font-size: 0.8rem;
+      margin-left: 0.5rem;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>snapd 26.10 Release Plan <span class="badge">snapd</span></h1>
+      <div class="meta">Owner: unknown | Generated: 2026-04-30 14:03:07</div>
+
+      <h2>Window</h2>
+      <ul>
+        <li>
+          Exact six-month anchor start: 2026-04-30
+        </li>
+        <li>Rounded window start (week resolution): 2026-04-27</li>
+        <li>Cycle month end: 2026-10-31</li>
+        <li>Rounded window end (week resolution): 2026-12-27</li>
+        <li>Base duration: 35 week(s), 185 day(s) exact</li>
+      </ul>
+
+      <h2>Included Sprints</h2>
+      <ul>
+        
+        
+        <li>May sprint - 04-05 to 17-05</li>
+        
+        <li>Virtual sprint - 17-08 to 23-08</li>
+        
+        <li>November sprint - 26-10 to 08-11</li>
+        
+        
+      </ul>
+
+      <h2>Included Releases</h2>
+      <ul>
+        
+        
+        <li>2.76 release: 26.04 carry-over - 2026-05-18 (+6w)</li>
+        
+        <li>2.76.1 release: bugfix - 2026-06-01 (+6w)</li>
+        
+        <li>2.76.2 release: security - 2026-06-15 (+5w)</li>
+        
+        <li>2.77 release: 26.10 image content - 2026-07-13 (+6w)</li>
+        
+        <li>2.77.1 release: bugfix - 2026-07-27 (+6w)</li>
+        
+        <li>2.77.2 release: security - 2026-08-10 (+5w)</li>
+        
+        <li>2.78 release: 26.10 update content - 2026-08-31 (+6w)</li>
+        
+        <li>2.78.1 release: bugfix - 2026-09-14 (+6w)</li>
+        
+        <li>2.78.2 release: security - 2026-09-28 (+5w)</li>
+        
+        <li>2.79 release: 26.10 carry-over content - 2026-10-19 (+8w)</li>
+        
+        <li>2.79.1 release: bugfix - 2026-11-09 (+6w)</li>
+        
+        <li>2.79.2 release: security - 2026-11-23 (+5w)</li>
+        
+        
+      </ul>
+
+      <h2>Included Deadlines</h2>
+      <ul>
+        
+        
+        <li>24.04.5: content freeze - 2026-08-06</li>
+        
+        <li>24.04.5: final release - 2026-08-27</li>
+        
+        <li>26.04.1: content freeze - 2026-08-07</li>
+        
+        <li>26.04.1: final release - 2026-08-28</li>
+        
+        <li>26.10: feature freeze - 2026-08-20</li>
+        
+        <li>26.10: beta freeze - 2026-09-21</li>
+        
+        <li>26.10: final release - 2026-10-15</li>
+        
+        
+      </ul>
+
+      <h2>Included Holidays</h2>
+      <ul>
+        
+        
+        <li>Midyear holiday - 27-07 to 09-08</li>
+        
+        <li>End-of-year holiday - 21-12 to 03-01</li>
+        
+        
+      </ul>
+
+      <h2>Diagram</h2>
+      <div class="timeline-wrap">
+        <svg
+          class="timeline-svg"
+          width="3216"
+          height="814"
+          xmlns="http://www.w3.org/2000/svg"
+          role="img"
+          aria-label="Release timeline"
+        >
+          <defs>
+            <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L8,3 L0,6 z" fill="context-stroke" />
+            </marker>
+          </defs>
+
+          <rect class="row-label-bg" x="0" y="18" width="170" height="38" />
+          <rect class="row-label-bg" x="0" y="56" width="170" height="44" />
+          <rect class="row-label-bg" x="0" y="100" width="170" height="40" />
+          <text class="row-label-text" x="16" y="42">MONTH</text>
+          <text class="row-label-text" x="16" y="83">WEEK</text>
+          <text class="row-label-text" x="16" y="126">PULSE</text>
+
+          
+          <rect class="month-cell" x="182" y="18" width="86" height="38" />
+          <text class="month-text" x="225.0" y="42">Apr 2026</text>
+          
+          <rect class="month-cell" x="268" y="18" width="344" height="38" />
+          <text class="month-text" x="440.0" y="42">May 2026</text>
+          
+          <rect class="month-cell" x="612" y="18" width="430" height="38" />
+          <text class="month-text" x="827.0" y="42">Jun 2026</text>
+          
+          <rect class="month-cell" x="1042" y="18" width="344" height="38" />
+          <text class="month-text" x="1214.0" y="42">Jul 2026</text>
+          
+          <rect class="month-cell" x="1386" y="18" width="430" height="38" />
+          <text class="month-text" x="1601.0" y="42">Aug 2026</text>
+          
+          <rect class="month-cell" x="1816" y="18" width="344" height="38" />
+          <text class="month-text" x="1988.0" y="42">Sep 2026</text>
+          
+          <rect class="month-cell" x="2160" y="18" width="344" height="38" />
+          <text class="month-text" x="2332.0" y="42">Oct 2026</text>
+          
+          <rect class="month-cell" x="2504" y="18" width="430" height="38" />
+          <text class="month-text" x="2719.0" y="42">Nov 2026</text>
+          
+          <rect class="month-cell" x="2934" y="18" width="258" height="38" />
+          <text class="month-text" x="3063.0" y="42">Dec 2026</text>
+          
+
+          
+          <rect class="week-cell" x="182" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="225.0" y="72">W17</text>
+          <text class="week-text" x="187" y="87">27-04 to 03-05</text>
+          
+          <rect class="week-cell" x="268" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="311.0" y="72">W18</text>
+          <text class="week-text" x="273" y="87">04-05 to 10-05</text>
+          
+          <rect class="week-cell" x="354" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="397.0" y="72">W19</text>
+          <text class="week-text" x="359" y="87">11-05 to 17-05</text>
+          
+          <rect class="week-cell" x="440" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="483.0" y="72">W20</text>
+          <text class="week-text" x="445" y="87">18-05 to 24-05</text>
+          
+          <rect class="week-cell" x="526" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="569.0" y="72">W21</text>
+          <text class="week-text" x="531" y="87">25-05 to 31-05</text>
+          
+          <rect class="week-cell" x="612" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="655.0" y="72">W22</text>
+          <text class="week-text" x="617" y="87">01-06 to 07-06</text>
+          
+          <rect class="week-cell" x="698" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="741.0" y="72">W23</text>
+          <text class="week-text" x="703" y="87">08-06 to 14-06</text>
+          
+          <rect class="week-cell" x="784" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="827.0" y="72">W24</text>
+          <text class="week-text" x="789" y="87">15-06 to 21-06</text>
+          
+          <rect class="week-cell" x="870" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="913.0" y="72">W25</text>
+          <text class="week-text" x="875" y="87">22-06 to 28-06</text>
+          
+          <rect class="week-cell" x="956" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="999.0" y="72">W26</text>
+          <text class="week-text" x="961" y="87">29-06 to 05-07</text>
+          
+          <rect class="week-cell" x="1042" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="1085.0" y="72">W27</text>
+          <text class="week-text" x="1047" y="87">06-07 to 12-07</text>
+          
+          <rect class="week-cell" x="1128" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="1171.0" y="72">W28</text>
+          <text class="week-text" x="1133" y="87">13-07 to 19-07</text>
+          
+          <rect class="week-cell" x="1214" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="1257.0" y="72">W29</text>
+          <text class="week-text" x="1219" y="87">20-07 to 26-07</text>
+          
+          <rect class="week-cell" x="1300" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="1343.0" y="72">W30</text>
+          <text class="week-text" x="1305" y="87">27-07 to 02-08</text>
+          
+          <rect class="week-cell" x="1386" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="1429.0" y="72">W31</text>
+          <text class="week-text" x="1391" y="87">03-08 to 09-08</text>
+          
+          <rect class="week-cell" x="1472" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="1515.0" y="72">W32</text>
+          <text class="week-text" x="1477" y="87">10-08 to 16-08</text>
+          
+          <rect class="week-cell" x="1558" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="1601.0" y="72">W33</text>
+          <text class="week-text" x="1563" y="87">17-08 to 23-08</text>
+          
+          <rect class="week-cell" x="1644" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="1687.0" y="72">W34</text>
+          <text class="week-text" x="1649" y="87">24-08 to 30-08</text>
+          
+          <rect class="week-cell" x="1730" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="1773.0" y="72">W35</text>
+          <text class="week-text" x="1735" y="87">31-08 to 06-09</text>
+          
+          <rect class="week-cell" x="1816" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="1859.0" y="72">W36</text>
+          <text class="week-text" x="1821" y="87">07-09 to 13-09</text>
+          
+          <rect class="week-cell" x="1902" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="1945.0" y="72">W37</text>
+          <text class="week-text" x="1907" y="87">14-09 to 20-09</text>
+          
+          <rect class="week-cell" x="1988" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="2031.0" y="72">W38</text>
+          <text class="week-text" x="1993" y="87">21-09 to 27-09</text>
+          
+          <rect class="week-cell" x="2074" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="2117.0" y="72">W39</text>
+          <text class="week-text" x="2079" y="87">28-09 to 04-10</text>
+          
+          <rect class="week-cell" x="2160" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="2203.0" y="72">W40</text>
+          <text class="week-text" x="2165" y="87">05-10 to 11-10</text>
+          
+          <rect class="week-cell" x="2246" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="2289.0" y="72">W41</text>
+          <text class="week-text" x="2251" y="87">12-10 to 18-10</text>
+          
+          <rect class="week-cell" x="2332" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="2375.0" y="72">W42</text>
+          <text class="week-text" x="2337" y="87">19-10 to 25-10</text>
+          
+          <rect class="week-cell" x="2418" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="2461.0" y="72">W43</text>
+          <text class="week-text" x="2423" y="87">26-10 to 01-11</text>
+          
+          <rect class="week-cell" x="2504" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="2547.0" y="72">W44</text>
+          <text class="week-text" x="2509" y="87">02-11 to 08-11</text>
+          
+          <rect class="week-cell" x="2590" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="2633.0" y="72">W45</text>
+          <text class="week-text" x="2595" y="87">09-11 to 15-11</text>
+          
+          <rect class="week-cell" x="2676" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="2719.0" y="72">W46</text>
+          <text class="week-text" x="2681" y="87">16-11 to 22-11</text>
+          
+          <rect class="week-cell" x="2762" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="2805.0" y="72">W47</text>
+          <text class="week-text" x="2767" y="87">23-11 to 29-11</text>
+          
+          <rect class="week-cell" x="2848" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="2891.0" y="72">W48</text>
+          <text class="week-text" x="2853" y="87">30-11 to 06-12</text>
+          
+          <rect class="week-cell" x="2934" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="2977.0" y="72">W49</text>
+          <text class="week-text" x="2939" y="87">07-12 to 13-12</text>
+          
+          <rect class="week-cell" x="3020" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="3063.0" y="72">W50</text>
+          <text class="week-text" x="3025" y="87">14-12 to 20-12</text>
+          
+          <rect class="week-cell" x="3106" y="56" width="86" height="44" />
+          <text class="week-text week-text-top" x="3149.0" y="72">W51</text>
+          <text class="week-text" x="3111" y="87">21-12 to 27-12</text>
+          
+
+          
+          <rect class="pulse-cell" x="182" y="100" width="172" height="40" />
+          <text class="pulse-text" x="268.0" y="121.0">P9</text>
+          
+          <rect class="pulse-cell" x="354" y="100" width="172" height="40" />
+          <text class="pulse-text" x="440.0" y="121.0">P10</text>
+          
+          <rect class="pulse-cell" x="526" y="100" width="172" height="40" />
+          <text class="pulse-text" x="612.0" y="121.0">P11</text>
+          
+          <rect class="pulse-cell" x="698" y="100" width="172" height="40" />
+          <text class="pulse-text" x="784.0" y="121.0">P12</text>
+          
+          <rect class="pulse-cell" x="870" y="100" width="172" height="40" />
+          <text class="pulse-text" x="956.0" y="121.0">P13</text>
+          
+          <rect class="pulse-cell" x="1042" y="100" width="172" height="40" />
+          <text class="pulse-text" x="1128.0" y="121.0">P14</text>
+          
+          <rect class="pulse-cell" x="1214" y="100" width="172" height="40" />
+          <text class="pulse-text" x="1300.0" y="121.0">P15</text>
+          
+          <rect class="pulse-cell" x="1386" y="100" width="172" height="40" />
+          <text class="pulse-text" x="1472.0" y="121.0">P16</text>
+          
+          <rect class="pulse-cell" x="1558" y="100" width="172" height="40" />
+          <text class="pulse-text" x="1644.0" y="121.0">P17</text>
+          
+          <rect class="pulse-cell" x="1730" y="100" width="172" height="40" />
+          <text class="pulse-text" x="1816.0" y="121.0">P18</text>
+          
+          <rect class="pulse-cell" x="1902" y="100" width="172" height="40" />
+          <text class="pulse-text" x="1988.0" y="121.0">P19</text>
+          
+          <rect class="pulse-cell" x="2074" y="100" width="172" height="40" />
+          <text class="pulse-text" x="2160.0" y="121.0">P20</text>
+          
+          <rect class="pulse-cell" x="2246" y="100" width="172" height="40" />
+          <text class="pulse-text" x="2332.0" y="121.0">P21</text>
+          
+          <rect class="pulse-cell" x="2418" y="100" width="172" height="40" />
+          <text class="pulse-text" x="2504.0" y="121.0">P22</text>
+          
+          <rect class="pulse-cell" x="2590" y="100" width="172" height="40" />
+          <text class="pulse-text" x="2676.0" y="121.0">P23</text>
+          
+          <rect class="pulse-cell" x="2762" y="100" width="172" height="40" />
+          <text class="pulse-text" x="2848.0" y="121.0">P24</text>
+          
+          <rect class="pulse-cell" x="2934" y="100" width="172" height="40" />
+          <text class="pulse-text" x="3020.0" y="121.0">P25</text>
+          
+          <rect class="pulse-cell" x="3106" y="100" width="86" height="40" />
+          <text class="pulse-text" x="3149.0" y="121.0">P26</text>
+          
+
+          
+          <rect
+            class="lane-band"
+            x="182"
+            y="154"
+            width="3010"
+            height="150"
+            rx="8"
+          />
+          <text class="lane-name" x="16" y="234">Releases</text>
+
+          
+          <line class="week-divider" x1="182" y1="154" x2="182" y2="304" />
+          
+          <line class="week-divider" x1="268" y1="154" x2="268" y2="304" />
+          
+          <line class="week-divider" x1="354" y1="154" x2="354" y2="304" />
+          
+          <line class="week-divider" x1="440" y1="154" x2="440" y2="304" />
+          
+          <line class="week-divider" x1="526" y1="154" x2="526" y2="304" />
+          
+          <line class="week-divider" x1="612" y1="154" x2="612" y2="304" />
+          
+          <line class="week-divider" x1="698" y1="154" x2="698" y2="304" />
+          
+          <line class="week-divider" x1="784" y1="154" x2="784" y2="304" />
+          
+          <line class="week-divider" x1="870" y1="154" x2="870" y2="304" />
+          
+          <line class="week-divider" x1="956" y1="154" x2="956" y2="304" />
+          
+          <line class="week-divider" x1="1042" y1="154" x2="1042" y2="304" />
+          
+          <line class="week-divider" x1="1128" y1="154" x2="1128" y2="304" />
+          
+          <line class="week-divider" x1="1214" y1="154" x2="1214" y2="304" />
+          
+          <line class="week-divider" x1="1300" y1="154" x2="1300" y2="304" />
+          
+          <line class="week-divider" x1="1386" y1="154" x2="1386" y2="304" />
+          
+          <line class="week-divider" x1="1472" y1="154" x2="1472" y2="304" />
+          
+          <line class="week-divider" x1="1558" y1="154" x2="1558" y2="304" />
+          
+          <line class="week-divider" x1="1644" y1="154" x2="1644" y2="304" />
+          
+          <line class="week-divider" x1="1730" y1="154" x2="1730" y2="304" />
+          
+          <line class="week-divider" x1="1816" y1="154" x2="1816" y2="304" />
+          
+          <line class="week-divider" x1="1902" y1="154" x2="1902" y2="304" />
+          
+          <line class="week-divider" x1="1988" y1="154" x2="1988" y2="304" />
+          
+          <line class="week-divider" x1="2074" y1="154" x2="2074" y2="304" />
+          
+          <line class="week-divider" x1="2160" y1="154" x2="2160" y2="304" />
+          
+          <line class="week-divider" x1="2246" y1="154" x2="2246" y2="304" />
+          
+          <line class="week-divider" x1="2332" y1="154" x2="2332" y2="304" />
+          
+          <line class="week-divider" x1="2418" y1="154" x2="2418" y2="304" />
+          
+          <line class="week-divider" x1="2504" y1="154" x2="2504" y2="304" />
+          
+          <line class="week-divider" x1="2590" y1="154" x2="2590" y2="304" />
+          
+          <line class="week-divider" x1="2676" y1="154" x2="2676" y2="304" />
+          
+          <line class="week-divider" x1="2762" y1="154" x2="2762" y2="304" />
+          
+          <line class="week-divider" x1="2848" y1="154" x2="2848" y2="304" />
+          
+          <line class="week-divider" x1="2934" y1="154" x2="2934" y2="304" />
+          
+          <line class="week-divider" x1="3020" y1="154" x2="3020" y2="304" />
+          
+          <line class="week-divider" x1="3106" y1="154" x2="3106" y2="304" />
+          
+
+          
+          
+          <rect
+            class="item release"
+            x="440"
+            y="164"
+            width="516"
+            height="38"
+            rx="6"
+            
+            style="fill: #5b21b6; stroke: #4c1d95;"
+            
+          >
+            <title>2.76 release: 26.04 carry-over: 2026-05-18 to 2026-06-28</title>
+          </rect>
+          
+
+          
+          <text class="item-label-inside item-label-centered" x="698.0" y="180">2.76 release: 26.04 carry-over</text>
+          
+          <text class="item-label-inside item-label-centered" x="698.0" y="194">18-05 to 28-06</text>
+          
+          
+          
+          <rect
+            class="item release"
+            x="612"
+            y="210"
+            width="516"
+            height="38"
+            rx="6"
+            
+            style="fill: #733ed6; stroke: #5c22b7;"
+            
+          >
+            <title>2.76.1 release: bugfix: 2026-06-01 to 2026-07-12</title>
+          </rect>
+          
+
+          
+          <text class="item-label-inside item-label-centered" x="870.0" y="226">2.76.1 release: bugfix</text>
+          
+          <text class="item-label-inside item-label-centered" x="870.0" y="240">01-06 to 12-07</text>
+          
+          
+          
+          <rect
+            class="item release"
+            x="784"
+            y="256"
+            width="430"
+            height="38"
+            rx="6"
+            
+            style="fill: #8b5cf6; stroke: #6d28d9;"
+            
+          >
+            <title>2.76.2 release: security: 2026-06-15 to 2026-07-19</title>
+          </rect>
+          
+
+          
+          <text class="item-label-inside item-label-centered" x="999.0" y="272">2.76.2 release: security</text>
+          
+          <text class="item-label-inside item-label-centered" x="999.0" y="286">15-06 to 19-07</text>
+          
+          
+          
+          <rect
+            class="item release"
+            x="1128"
+            y="164"
+            width="516"
+            height="38"
+            rx="6"
+            
+            style="fill: #5b21b6; stroke: #4c1d95;"
+            
+          >
+            <title>2.77 release: 26.10 image content: 2026-07-13 to 2026-08-23</title>
+          </rect>
+          
+
+          
+          <text class="item-label-inside item-label-centered" x="1386.0" y="180">2.77 release: 26.10 image content</text>
+          
+          <text class="item-label-inside item-label-centered" x="1386.0" y="194">13-07 to 23-08</text>
+          
+          
+          
+          <rect
+            class="item release"
+            x="1300"
+            y="210"
+            width="516"
+            height="38"
+            rx="6"
+            
+            style="fill: #733ed6; stroke: #5c22b7;"
+            
+          >
+            <title>2.77.1 release: bugfix: 2026-07-27 to 2026-09-06</title>
+          </rect>
+          
+
+          
+          <text class="item-label-inside item-label-centered" x="1558.0" y="226">2.77.1 release: bugfix</text>
+          
+          <text class="item-label-inside item-label-centered" x="1558.0" y="240">27-07 to 06-09</text>
+          
+          
+          
+          <rect
+            class="item release"
+            x="1472"
+            y="256"
+            width="430"
+            height="38"
+            rx="6"
+            
+            style="fill: #8b5cf6; stroke: #6d28d9;"
+            
+          >
+            <title>2.77.2 release: security: 2026-08-10 to 2026-09-13</title>
+          </rect>
+          
+
+          
+          <text class="item-label-inside item-label-centered" x="1687.0" y="272">2.77.2 release: security</text>
+          
+          <text class="item-label-inside item-label-centered" x="1687.0" y="286">10-08 to 13-09</text>
+          
+          
+          
+          <rect
+            class="item release"
+            x="1730"
+            y="164"
+            width="516"
+            height="38"
+            rx="6"
+            
+            style="fill: #5b21b6; stroke: #4c1d95;"
+            
+          >
+            <title>2.78 release: 26.10 update content: 2026-08-31 to 2026-10-11</title>
+          </rect>
+          
+
+          
+          <text class="item-label-inside item-label-centered" x="1988.0" y="180">2.78 release: 26.10 update content</text>
+          
+          <text class="item-label-inside item-label-centered" x="1988.0" y="194">31-08 to 11-10</text>
+          
+          
+          
+          <rect
+            class="item release"
+            x="1902"
+            y="210"
+            width="516"
+            height="38"
+            rx="6"
+            
+            style="fill: #733ed6; stroke: #5c22b7;"
+            
+          >
+            <title>2.78.1 release: bugfix: 2026-09-14 to 2026-10-25</title>
+          </rect>
+          
+
+          
+          <text class="item-label-inside item-label-centered" x="2160.0" y="226">2.78.1 release: bugfix</text>
+          
+          <text class="item-label-inside item-label-centered" x="2160.0" y="240">14-09 to 25-10</text>
+          
+          
+          
+          <rect
+            class="item release"
+            x="2074"
+            y="256"
+            width="430"
+            height="38"
+            rx="6"
+            
+            style="fill: #8b5cf6; stroke: #6d28d9;"
+            
+          >
+            <title>2.78.2 release: security: 2026-09-28 to 2026-11-01</title>
+          </rect>
+          
+
+          
+          <text class="item-label-inside item-label-centered" x="2289.0" y="272">2.78.2 release: security</text>
+          
+          <text class="item-label-inside item-label-centered" x="2289.0" y="286">28-09 to 01-11</text>
+          
+          
+          
+          <rect
+            class="item release"
+            x="2332"
+            y="164"
+            width="688"
+            height="38"
+            rx="6"
+            
+            style="fill: #5b21b6; stroke: #4c1d95;"
+            
+          >
+            <title>2.79 release: 26.10 carry-over content: 2026-10-19 to 2026-12-13</title>
+          </rect>
+          
+
+          
+          <text class="item-label-inside item-label-centered" x="2676.0" y="180">2.79 release: 26.10 carry-over content</text>
+          
+          <text class="item-label-inside item-label-centered" x="2676.0" y="194">19-10 to 13-12</text>
+          
+          
+          
+          <rect
+            class="item release"
+            x="2590"
+            y="210"
+            width="516"
+            height="38"
+            rx="6"
+            
+            style="fill: #733ed6; stroke: #5c22b7;"
+            
+          >
+            <title>2.79.1 release: bugfix: 2026-11-09 to 2026-12-20</title>
+          </rect>
+          
+
+          
+          <text class="item-label-inside item-label-centered" x="2848.0" y="226">2.79.1 release: bugfix</text>
+          
+          <text class="item-label-inside item-label-centered" x="2848.0" y="240">09-11 to 20-12</text>
+          
+          
+          
+          <rect
+            class="item release"
+            x="2762"
+            y="256"
+            width="430"
+            height="38"
+            rx="6"
+            
+            style="fill: #8b5cf6; stroke: #6d28d9;"
+            
+          >
+            <title>2.79.2 release: security: 2026-11-23 to 2026-12-27</title>
+          </rect>
+          
+
+          
+          <text class="item-label-inside item-label-centered" x="2977.0" y="272">2.79.2 release: security</text>
+          
+          <text class="item-label-inside item-label-centered" x="2977.0" y="286">23-11 to 27-12</text>
+          
+          
+          
+          <rect
+            class="lane-band"
+            x="182"
+            y="316"
+            width="3010"
+            height="288"
+            rx="8"
+          />
+          <text class="lane-name" x="16" y="465">Deadlines</text>
+
+          
+          <line class="week-divider" x1="182" y1="316" x2="182" y2="604" />
+          
+          <line class="week-divider" x1="268" y1="316" x2="268" y2="604" />
+          
+          <line class="week-divider" x1="354" y1="316" x2="354" y2="604" />
+          
+          <line class="week-divider" x1="440" y1="316" x2="440" y2="604" />
+          
+          <line class="week-divider" x1="526" y1="316" x2="526" y2="604" />
+          
+          <line class="week-divider" x1="612" y1="316" x2="612" y2="604" />
+          
+          <line class="week-divider" x1="698" y1="316" x2="698" y2="604" />
+          
+          <line class="week-divider" x1="784" y1="316" x2="784" y2="604" />
+          
+          <line class="week-divider" x1="870" y1="316" x2="870" y2="604" />
+          
+          <line class="week-divider" x1="956" y1="316" x2="956" y2="604" />
+          
+          <line class="week-divider" x1="1042" y1="316" x2="1042" y2="604" />
+          
+          <line class="week-divider" x1="1128" y1="316" x2="1128" y2="604" />
+          
+          <line class="week-divider" x1="1214" y1="316" x2="1214" y2="604" />
+          
+          <line class="week-divider" x1="1300" y1="316" x2="1300" y2="604" />
+          
+          <line class="week-divider" x1="1386" y1="316" x2="1386" y2="604" />
+          
+          <line class="week-divider" x1="1472" y1="316" x2="1472" y2="604" />
+          
+          <line class="week-divider" x1="1558" y1="316" x2="1558" y2="604" />
+          
+          <line class="week-divider" x1="1644" y1="316" x2="1644" y2="604" />
+          
+          <line class="week-divider" x1="1730" y1="316" x2="1730" y2="604" />
+          
+          <line class="week-divider" x1="1816" y1="316" x2="1816" y2="604" />
+          
+          <line class="week-divider" x1="1902" y1="316" x2="1902" y2="604" />
+          
+          <line class="week-divider" x1="1988" y1="316" x2="1988" y2="604" />
+          
+          <line class="week-divider" x1="2074" y1="316" x2="2074" y2="604" />
+          
+          <line class="week-divider" x1="2160" y1="316" x2="2160" y2="604" />
+          
+          <line class="week-divider" x1="2246" y1="316" x2="2246" y2="604" />
+          
+          <line class="week-divider" x1="2332" y1="316" x2="2332" y2="604" />
+          
+          <line class="week-divider" x1="2418" y1="316" x2="2418" y2="604" />
+          
+          <line class="week-divider" x1="2504" y1="316" x2="2504" y2="604" />
+          
+          <line class="week-divider" x1="2590" y1="316" x2="2590" y2="604" />
+          
+          <line class="week-divider" x1="2676" y1="316" x2="2676" y2="604" />
+          
+          <line class="week-divider" x1="2762" y1="316" x2="2762" y2="604" />
+          
+          <line class="week-divider" x1="2848" y1="316" x2="2848" y2="604" />
+          
+          <line class="week-divider" x1="2934" y1="316" x2="2934" y2="604" />
+          
+          <line class="week-divider" x1="3020" y1="316" x2="3020" y2="604" />
+          
+          <line class="week-divider" x1="3106" y1="316" x2="3106" y2="604" />
+          
+
+          
+          
+          <polygon
+            class="milestone-deadline"
+            points="1446.2,333 1454.2,341.0 1446.2,349 1438.2,341.0"
+            
+            style="fill: #be123c; stroke: #9f1239;"
+            
+          >
+            <title>24.04.5: content freeze: 2026-08-06</title>
+          </polygon>
+          
+
+          
+          <text class="item-label-inside item-label-centered deadline-label" x="1446.2" y="366">24.04.5: content</text>
+          
+          <text class="item-label-inside item-label-centered deadline-label" x="1446.2" y="380">freeze</text>
+          
+          <text class="item-label-inside item-label-centered deadline-label" x="1446.2" y="394">06-08-2026</text>
+          
+          
+          
+          <polygon
+            class="milestone-deadline"
+            points="1704.2,340 1712.2,348.0 1704.2,356 1696.2,348.0"
+            
+            style="fill: #be123c; stroke: #9f1239;"
+            
+          >
+            <title>24.04.5: final release: 2026-08-27</title>
+          </polygon>
+          
+
+          
+          <text class="item-label-inside item-label-centered deadline-label" x="1704.2" y="373">24.04.5: final release</text>
+          
+          <text class="item-label-inside item-label-centered deadline-label" x="1704.2" y="387">27-08-2026</text>
+          
+          
+          
+          <polygon
+            class="milestone-deadline"
+            points="1463.4,425 1471.4,433.0 1463.4,441 1455.4,433.0"
+            
+            style="fill: #0369a1; stroke: #075985;"
+            
+          >
+            <title>26.04.1: content freeze: 2026-08-07</title>
+          </polygon>
+          
+
+          
+          <text class="item-label-inside item-label-centered deadline-label" x="1463.4" y="458">26.04.1: content</text>
+          
+          <text class="item-label-inside item-label-centered deadline-label" x="1463.4" y="472">freeze</text>
+          
+          <text class="item-label-inside item-label-centered deadline-label" x="1463.4" y="486">07-08-2026</text>
+          
+          
+          
+          <polygon
+            class="milestone-deadline"
+            points="1721.4,432 1729.4,440.0 1721.4,448 1713.4,440.0"
+            
+            style="fill: #0369a1; stroke: #075985;"
+            
+          >
+            <title>26.04.1: final release: 2026-08-28</title>
+          </polygon>
+          
+
+          
+          <text class="item-label-inside item-label-centered deadline-label" x="1721.4" y="465">26.04.1: final release</text>
+          
+          <text class="item-label-inside item-label-centered deadline-label" x="1721.4" y="479">28-08-2026</text>
+          
+          
+          
+          <polygon
+            class="milestone-deadline"
+            points="1618.2,524 1626.2,532.0 1618.2,540 1610.2,532.0"
+            
+            style="fill: #15803d; stroke: #166534;"
+            
+          >
+            <title>26.10: feature freeze: 2026-08-20</title>
+          </polygon>
+          
+
+          
+          <text class="item-label-inside item-label-centered deadline-label" x="1618.2" y="557">26.10: feature freeze</text>
+          
+          <text class="item-label-inside item-label-centered deadline-label" x="1618.2" y="571">20-08-2026</text>
+          
+          
+          
+          <polygon
+            class="milestone-deadline"
+            points="1996.6,510 2004.6,518.0 1996.6,526 1988.6,518.0"
+            
+            style="fill: #15803d; stroke: #166534;"
+            
+          >
+            <title>26.10: beta freeze: 2026-09-21</title>
+          </polygon>
+          
+
+          
+          <text class="item-label-inside item-label-centered deadline-label" x="1996.6" y="543">26.10:</text>
+          
+          <text class="item-label-inside item-label-centered deadline-label" x="1996.6" y="557">beta</text>
+          
+          <text class="item-label-inside item-label-centered deadline-label" x="1996.6" y="571">freeze</text>
+          
+          <text class="item-label-inside item-label-centered deadline-label" x="1996.6" y="585">21-09-2026</text>
+          
+          
+          
+          <polygon
+            class="milestone-deadline"
+            points="2306.2,524 2314.2,532.0 2306.2,540 2298.2,532.0"
+            
+            style="fill: #15803d; stroke: #166534;"
+            
+          >
+            <title>26.10: final release: 2026-10-15</title>
+          </polygon>
+          
+
+          
+          <text class="item-label-inside item-label-centered deadline-label" x="2306.2" y="557">26.10: final release</text>
+          
+          <text class="item-label-inside item-label-centered deadline-label" x="2306.2" y="571">15-10-2026</text>
+          
+          
+          
+          <rect
+            class="lane-band"
+            x="182"
+            y="616"
+            width="3010"
+            height="86"
+            rx="8"
+          />
+          <text class="lane-name" x="16" y="664">Holidays</text>
+
+          
+          <line class="week-divider" x1="182" y1="616" x2="182" y2="702" />
+          
+          <line class="week-divider" x1="268" y1="616" x2="268" y2="702" />
+          
+          <line class="week-divider" x1="354" y1="616" x2="354" y2="702" />
+          
+          <line class="week-divider" x1="440" y1="616" x2="440" y2="702" />
+          
+          <line class="week-divider" x1="526" y1="616" x2="526" y2="702" />
+          
+          <line class="week-divider" x1="612" y1="616" x2="612" y2="702" />
+          
+          <line class="week-divider" x1="698" y1="616" x2="698" y2="702" />
+          
+          <line class="week-divider" x1="784" y1="616" x2="784" y2="702" />
+          
+          <line class="week-divider" x1="870" y1="616" x2="870" y2="702" />
+          
+          <line class="week-divider" x1="956" y1="616" x2="956" y2="702" />
+          
+          <line class="week-divider" x1="1042" y1="616" x2="1042" y2="702" />
+          
+          <line class="week-divider" x1="1128" y1="616" x2="1128" y2="702" />
+          
+          <line class="week-divider" x1="1214" y1="616" x2="1214" y2="702" />
+          
+          <line class="week-divider" x1="1300" y1="616" x2="1300" y2="702" />
+          
+          <line class="week-divider" x1="1386" y1="616" x2="1386" y2="702" />
+          
+          <line class="week-divider" x1="1472" y1="616" x2="1472" y2="702" />
+          
+          <line class="week-divider" x1="1558" y1="616" x2="1558" y2="702" />
+          
+          <line class="week-divider" x1="1644" y1="616" x2="1644" y2="702" />
+          
+          <line class="week-divider" x1="1730" y1="616" x2="1730" y2="702" />
+          
+          <line class="week-divider" x1="1816" y1="616" x2="1816" y2="702" />
+          
+          <line class="week-divider" x1="1902" y1="616" x2="1902" y2="702" />
+          
+          <line class="week-divider" x1="1988" y1="616" x2="1988" y2="702" />
+          
+          <line class="week-divider" x1="2074" y1="616" x2="2074" y2="702" />
+          
+          <line class="week-divider" x1="2160" y1="616" x2="2160" y2="702" />
+          
+          <line class="week-divider" x1="2246" y1="616" x2="2246" y2="702" />
+          
+          <line class="week-divider" x1="2332" y1="616" x2="2332" y2="702" />
+          
+          <line class="week-divider" x1="2418" y1="616" x2="2418" y2="702" />
+          
+          <line class="week-divider" x1="2504" y1="616" x2="2504" y2="702" />
+          
+          <line class="week-divider" x1="2590" y1="616" x2="2590" y2="702" />
+          
+          <line class="week-divider" x1="2676" y1="616" x2="2676" y2="702" />
+          
+          <line class="week-divider" x1="2762" y1="616" x2="2762" y2="702" />
+          
+          <line class="week-divider" x1="2848" y1="616" x2="2848" y2="702" />
+          
+          <line class="week-divider" x1="2934" y1="616" x2="2934" y2="702" />
+          
+          <line class="week-divider" x1="3020" y1="616" x2="3020" y2="702" />
+          
+          <line class="week-divider" x1="3106" y1="616" x2="3106" y2="702" />
+          
+
+          
+          
+          <rect
+            class="item holiday"
+            x="1300"
+            y="626"
+            width="172"
+            height="66"
+            rx="6"
+            
+          >
+            <title>Midyear holiday: 2026-07-27 to 2026-08-09</title>
+          </rect>
+          
+
+          
+          <text class="item-label-inside item-label-centered" x="1386.0" y="656">Midyear holiday</text>
+          
+          <text class="item-label-inside item-label-centered" x="1386.0" y="670">27-07 to 09-08</text>
+          
+          
+          
+          <rect
+            class="item holiday"
+            x="3106"
+            y="626"
+            width="86"
+            height="66"
+            rx="6"
+            
+          >
+            <title>End-of-year holiday: 2026-12-21 to 2027-01-03</title>
+          </rect>
+          
+
+          
+          <text class="item-label-inside item-label-centered" x="3149.0" y="642">End-of-yea</text>
+          
+          <text class="item-label-inside item-label-centered" x="3149.0" y="656">r holiday</text>
+          
+          <text class="item-label-inside item-label-centered" x="3149.0" y="670">21-12 to</text>
+          
+          <text class="item-label-inside item-label-centered" x="3149.0" y="684">03-01</text>
+          
+          
+          
+          <rect
+            class="lane-band"
+            x="182"
+            y="714"
+            width="3010"
+            height="86"
+            rx="8"
+          />
+          <text class="lane-name" x="16" y="762">Sprints</text>
+
+          
+          <line class="week-divider" x1="182" y1="714" x2="182" y2="800" />
+          
+          <line class="week-divider" x1="268" y1="714" x2="268" y2="800" />
+          
+          <line class="week-divider" x1="354" y1="714" x2="354" y2="800" />
+          
+          <line class="week-divider" x1="440" y1="714" x2="440" y2="800" />
+          
+          <line class="week-divider" x1="526" y1="714" x2="526" y2="800" />
+          
+          <line class="week-divider" x1="612" y1="714" x2="612" y2="800" />
+          
+          <line class="week-divider" x1="698" y1="714" x2="698" y2="800" />
+          
+          <line class="week-divider" x1="784" y1="714" x2="784" y2="800" />
+          
+          <line class="week-divider" x1="870" y1="714" x2="870" y2="800" />
+          
+          <line class="week-divider" x1="956" y1="714" x2="956" y2="800" />
+          
+          <line class="week-divider" x1="1042" y1="714" x2="1042" y2="800" />
+          
+          <line class="week-divider" x1="1128" y1="714" x2="1128" y2="800" />
+          
+          <line class="week-divider" x1="1214" y1="714" x2="1214" y2="800" />
+          
+          <line class="week-divider" x1="1300" y1="714" x2="1300" y2="800" />
+          
+          <line class="week-divider" x1="1386" y1="714" x2="1386" y2="800" />
+          
+          <line class="week-divider" x1="1472" y1="714" x2="1472" y2="800" />
+          
+          <line class="week-divider" x1="1558" y1="714" x2="1558" y2="800" />
+          
+          <line class="week-divider" x1="1644" y1="714" x2="1644" y2="800" />
+          
+          <line class="week-divider" x1="1730" y1="714" x2="1730" y2="800" />
+          
+          <line class="week-divider" x1="1816" y1="714" x2="1816" y2="800" />
+          
+          <line class="week-divider" x1="1902" y1="714" x2="1902" y2="800" />
+          
+          <line class="week-divider" x1="1988" y1="714" x2="1988" y2="800" />
+          
+          <line class="week-divider" x1="2074" y1="714" x2="2074" y2="800" />
+          
+          <line class="week-divider" x1="2160" y1="714" x2="2160" y2="800" />
+          
+          <line class="week-divider" x1="2246" y1="714" x2="2246" y2="800" />
+          
+          <line class="week-divider" x1="2332" y1="714" x2="2332" y2="800" />
+          
+          <line class="week-divider" x1="2418" y1="714" x2="2418" y2="800" />
+          
+          <line class="week-divider" x1="2504" y1="714" x2="2504" y2="800" />
+          
+          <line class="week-divider" x1="2590" y1="714" x2="2590" y2="800" />
+          
+          <line class="week-divider" x1="2676" y1="714" x2="2676" y2="800" />
+          
+          <line class="week-divider" x1="2762" y1="714" x2="2762" y2="800" />
+          
+          <line class="week-divider" x1="2848" y1="714" x2="2848" y2="800" />
+          
+          <line class="week-divider" x1="2934" y1="714" x2="2934" y2="800" />
+          
+          <line class="week-divider" x1="3020" y1="714" x2="3020" y2="800" />
+          
+          <line class="week-divider" x1="3106" y1="714" x2="3106" y2="800" />
+          
+
+          
+          
+          <rect
+            class="item sprint"
+            x="268"
+            y="724"
+            width="172"
+            height="66"
+            rx="6"
+            
+          >
+            <title>May sprint: 2026-05-04 to 2026-05-17</title>
+          </rect>
+          
+
+          
+          <text class="item-label-inside item-label-centered" x="354.0" y="754">May sprint</text>
+          
+          <text class="item-label-inside item-label-centered" x="354.0" y="768">04-05 to 17-05</text>
+          
+          
+          
+          <rect
+            class="item sprint"
+            x="1558"
+            y="724"
+            width="86"
+            height="66"
+            rx="6"
+            
+          >
+            <title>Virtual sprint: 2026-08-17 to 2026-08-23</title>
+          </rect>
+          
+
+          
+          <text class="item-label-inside item-label-centered" x="1601.0" y="740">Virtual</text>
+          
+          <text class="item-label-inside item-label-centered" x="1601.0" y="754">sprint</text>
+          
+          <text class="item-label-inside item-label-centered" x="1601.0" y="768">17-08 to</text>
+          
+          <text class="item-label-inside item-label-centered" x="1601.0" y="782">23-08</text>
+          
+          
+          
+          <rect
+            class="item sprint"
+            x="2418"
+            y="724"
+            width="172"
+            height="66"
+            rx="6"
+            
+          >
+            <title>November sprint: 2026-10-26 to 2026-11-08</title>
+          </rect>
+          
+
+          
+          <text class="item-label-inside item-label-centered" x="2504.0" y="754">November sprint</text>
+          
+          <text class="item-label-inside item-label-centered" x="2504.0" y="768">26-10 to 08-11</text>
+          
+          
+          
+
+          
+          <line
+            class="link-line"
+            x1="1214.0"
+            y1="275.0"
+            x2="1446.2"
+            y2="341.0"
+            style="stroke: #6d28d9;"
+            marker-end="url(#arrowhead)"
+          />
+          
+          <line
+            class="link-line"
+            x1="1214.0"
+            y1="275.0"
+            x2="1463.4"
+            y2="433.0"
+            style="stroke: #6d28d9;"
+            marker-end="url(#arrowhead)"
+          />
+          
+          <line
+            class="link-line"
+            x1="1902.0"
+            y1="275.0"
+            x2="1996.6"
+            y2="518.0"
+            style="stroke: #6d28d9;"
+            marker-end="url(#arrowhead)"
+          />
+          
+        </svg>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
