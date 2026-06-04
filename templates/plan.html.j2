@@ -1,369 +1,174 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dashboard-layout">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{{ plan_name }}</title>
-  <style>
-    :root {
-      --bg: #f6f7f4;
-      --panel: #ffffff;
-      --text: #1f252d;
-      --muted: #5f6670;
-      --border: #d4dbe2;
-      --accent: #0f766e;
-    }
-
-    body {
-      margin: 0;
-      font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
-      background: radial-gradient(circle at 14% 8%, #eaf2ee 0, var(--bg) 36%);
-      color: var(--text);
-    }
-
-    .container {
-      max-width: 1400px;
-      margin: 2rem auto;
-      padding: 0 1rem;
-    }
-
-    .card {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      box-shadow: 0 12px 30px rgba(16, 24, 40, 0.06);
-      padding: 1.25rem;
-    }
-
-    h1, h2 {
-      margin: 0 0 0.75rem;
-      letter-spacing: 0.012em;
-    }
-
-    .meta {
-      color: var(--muted);
-      margin-bottom: 1rem;
-      font-size: 0.95rem;
-    }
-
-    .timeline-wrap {
-      overflow-x: auto;
-      border-top: 1px solid var(--border);
-      padding-top: 1rem;
-      padding-bottom: 0.5rem;
-    }
-
-    .timeline-svg {
-      display: block;
-      background: linear-gradient(180deg, #ffffff 0%, #f9fbfd 100%);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-    }
-
-    .row-label-bg {
-      fill: #eef2f6;
-    }
-
-    .row-label-text {
-      fill: #2d3845;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-    }
-
-    .month-cell {
-      fill: #e8eff7;
-      stroke: #cbd7e5;
-      stroke-width: 1;
-    }
-
-    .month-text {
-      fill: #223142;
-      font-size: 12px;
-      font-weight: 700;
-      text-anchor: middle;
-    }
-
-    .week-cell {
-      fill: #ffffff;
-      stroke: #dde4ec;
-      stroke-width: 1;
-    }
-
-    .week-text {
-      fill: #4a5562;
-      font-size: 10px;
-      font-weight: 600;
-    }
-
-    .week-text-top {
-      text-anchor: middle;
-    }
-
-    .pulse-cell {
-      fill: #d9efe9;
-      stroke: #a9d7cc;
-      stroke-width: 1;
-    }
-
-    .pulse-text {
-      fill: #145a4d;
-      font-size: 12px;
-      font-weight: 700;
-      text-anchor: middle;
-      dominant-baseline: middle;
-    }
-
-    .week-divider {
-      stroke: #e9eef4;
-      stroke-width: 1;
-    }
-
-    .lane-band {
-      fill: #f6f9fc;
-      stroke: #dce5ef;
-      stroke-width: 1;
-    }
-
-    .lane-name {
-      fill: #1f2937;
-      font-size: 14px;
-      font-weight: 700;
-    }
-
-    .item {
-      stroke-width: 1;
-      fill-opacity: 0.96;
-    }
-
-    .item.base {
-      fill: #5f6975;
-      stroke: #4b5563;
-    }
-
-    .item.sprint {
-      fill: #0f74a8;
-      stroke: #075985;
-    }
-
-    .item.release {
-      fill: #6d28d9;
-      stroke: #5b21b6;
-    }
-
-    .item.holiday {
-      fill: #b66516;
-      stroke: #8a4a0f;
-    }
-
-    .milestone-deadline {
-      fill: #be123c;
-      stroke: #9f1239;
-      stroke-width: 1.5;
-    }
-
-    .item-label-inside {
-      fill: #ffffff;
-      font-size: 12px;
-      font-weight: 700;
-      pointer-events: none;
-    }
-
-    .item-label-centered {
-      text-anchor: middle;
-    }
-
-    .deadline-label {
-      fill: #7f1d1d;
-    }
-
-    .link-line {
-      stroke-width: 1.8;
-      stroke-dasharray: 4 3;
-      fill: none;
-      opacity: 0.9;
-    }
-
-
-    ul {
-      margin-top: 0.25rem;
-    }
-
-    .badge {
-      display: inline-block;
-      background: #e7f3ee;
-      color: var(--accent);
-      border: 1px solid #cce7dd;
-      border-radius: 999px;
-      padding: 0.1rem 0.55rem;
-      font-size: 0.8rem;
-      margin-left: 0.5rem;
-      vertical-align: middle;
-    }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ plan_name }}</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="static/css/main.css">
+    <link rel="stylesheet" href="static/css/sidebar.css">
+    <link rel="stylesheet" href="static/css/timeline.css">
+    
+    <style>
+        /* Inline styles for quick loading */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--color-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.3s ease;
+        }
+        
+        .loading-overlay.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <div class="card">
-      <h1>{{ plan_name }} <span class="badge">{{ project }}</span></h1>
-      <div class="meta">Owner: {{ owner }} | Generated: {{ generated_at }}</div>
-
-      <h2>Window</h2>
-      <ul>
-        <li>
-          Exact six-month anchor start: {{ window.exact_start }}
-        </li>
-        <li>Rounded window start (week resolution): {{ window.window_start }}</li>
-        <li>Cycle month end: {{ window.cycle_end }}</li>
-        <li>Rounded window end (week resolution): {{ window.window_end }}</li>
-        <li>Base duration: {{ window.base_weeks }} week(s), {{ window.exact_days }} day(s) exact</li>
-      </ul>
-
-      <h2>Included Sprints</h2>
-      <ul>
-        {% if sprints %}
-        {% for sprint in sprints %}
-        <li>{{ sprint.label }} - {{ sprint.range_label }}</li>
-        {% endfor %}
-        {% else %}
-        <li>No sprint entries fall within the calculated window.</li>
-        {% endif %}
-      </ul>
-
-      <h2>Included Releases</h2>
-      <ul>
-        {% if releases %}
-        {% for release in releases %}
-        <li>{{ release.label }} - {{ release.start }} (+{{ release.duration_weeks }}w)</li>
-        {% endfor %}
-        {% else %}
-        <li>No release entries fall within the calculated window.</li>
-        {% endif %}
-      </ul>
-
-      <h2>Included Deadlines</h2>
-      <ul>
-        {% if deadlines %}
-        {% for deadline in deadlines %}
-        <li>{{ deadline.label }} - {{ deadline.start }}</li>
-        {% endfor %}
-        {% else %}
-        <li>No deadline entries fall within the calculated window.</li>
-        {% endif %}
-      </ul>
-
-      <h2>Included Holidays</h2>
-      <ul>
-        {% if holidays %}
-        {% for holiday in holidays %}
-        <li>{{ holiday.label }} - {{ holiday.range_label }}</li>
-        {% endfor %}
-        {% else %}
-        <li>No holiday entries fall within the calculated window.</li>
-        {% endif %}
-      </ul>
-
-      <h2>Diagram</h2>
-      <div class="timeline-wrap">
-        <svg
-          class="timeline-svg"
-          width="{{ render_model.width }}"
-          height="{{ render_model.height }}"
-          xmlns="http://www.w3.org/2000/svg"
-          role="img"
-          aria-label="Release timeline"
-        >
-          <defs>
-            <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
-              <path d="M0,0 L8,3 L0,6 z" fill="context-stroke" />
-            </marker>
-          </defs>
-
-          <rect class="row-label-bg" x="0" y="{{ render_model.month_y }}" width="{{ render_model.left_label_width }}" height="{{ render_model.month_row_height }}" />
-          <rect class="row-label-bg" x="0" y="{{ render_model.week_y }}" width="{{ render_model.left_label_width }}" height="{{ render_model.week_row_height }}" />
-          <rect class="row-label-bg" x="0" y="{{ render_model.pulse_y }}" width="{{ render_model.left_label_width }}" height="{{ render_model.pulse_row_height }}" />
-          <text class="row-label-text" x="16" y="{{ render_model.month_y + 24 }}">MONTH</text>
-          <text class="row-label-text" x="16" y="{{ render_model.week_y + 27 }}">WEEK</text>
-          <text class="row-label-text" x="16" y="{{ render_model.pulse_y + 26 }}">PULSE</text>
-
-          {% for month in render_model.months %}
-          <rect class="month-cell" x="{{ month.x }}" y="{{ render_model.month_y }}" width="{{ month.width }}" height="{{ render_model.month_row_height }}" />
-          <text class="month-text" x="{{ month.x + (month.width / 2) }}" y="{{ render_model.month_y + 24 }}">{{ month.label }}</text>
-          {% endfor %}
-
-          {% for week in render_model.weeks %}
-          <rect class="week-cell" x="{{ week.x }}" y="{{ render_model.week_y }}" width="{{ week.width }}" height="{{ render_model.week_row_height }}" />
-          <text class="week-text week-text-top" x="{{ week.x + (week.width / 2) }}" y="{{ render_model.week_y + 16 }}">{{ week.week_label }}</text>
-          <text class="week-text" x="{{ week.x + 5 }}" y="{{ render_model.week_y + 31 }}">{{ week.range_label }}</text>
-          {% endfor %}
-
-          {% for pulse in render_model.pulses %}
-          <rect class="pulse-cell" x="{{ pulse.x }}" y="{{ render_model.pulse_y }}" width="{{ pulse.width }}" height="{{ render_model.pulse_row_height }}" />
-          <text class="pulse-text" x="{{ pulse.x + (pulse.width / 2) }}" y="{{ render_model.pulse_y + (render_model.pulse_row_height / 2) + 1 }}">{{ pulse.label }}</text>
-          {% endfor %}
-
-          {% for lane in render_model.lanes %}
-          <rect
-            class="lane-band"
-            x="{{ render_model.grid_x }}"
-            y="{{ lane.y }}"
-            width="{{ render_model.grid_width }}"
-            height="{{ lane.height }}"
-            rx="8"
-          />
-          <text class="lane-name" x="16" y="{{ lane.label_y }}">{{ lane.name }}</text>
-
-          {% for week in render_model.weeks %}
-          <line class="week-divider" x1="{{ week.x }}" y1="{{ lane.y }}" x2="{{ week.x }}" y2="{{ lane.y + lane.height }}" />
-          {% endfor %}
-
-          {% for item in lane["items"] %}
-          {% if item.shape == "diamond" %}
-          <polygon
-            class="milestone-deadline"
-            points="{{ item.diamond_points }}"
-            {% if item.fill_color and item.stroke_color %}
-            style="fill: {{ item.fill_color }}; stroke: {{ item.stroke_color }};"
-            {% endif %}
-          >
-            <title>{{ item.label }}: {{ item.start }}</title>
-          </polygon>
-          {% else %}
-          <rect
-            class="item {{ lane.class_name }}"
-            x="{{ item.x }}"
-            y="{{ item.y }}"
-            width="{{ item.width }}"
-            height="{{ item.height }}"
-            rx="6"
-            {% if item.fill_color and item.stroke_color %}
-            style="fill: {{ item.fill_color }}; stroke: {{ item.stroke_color }};"
-            {% endif %}
-          >
-            <title>{{ item.label }}: {{ item.start }} to {{ item.end }}</title>
-          </rect>
-          {% endif %}
-
-          {% for line in item.text_lines %}
-          <text class="{{ line.class_name }}" x="{{ line.x }}" y="{{ line.y }}">{{ line.text }}</text>
-          {% endfor %}
-          {% endfor %}
-          {% endfor %}
-
-          {% for link in render_model.links %}
-          <line
-            class="link-line"
-            x1="{{ link.x1 }}"
-            y1="{{ link.y1 }}"
-            x2="{{ link.x2 }}"
-            y2="{{ link.y2 }}"
-            style="stroke: {{ link.color }};"
-            marker-end="url(#arrowhead)"
-          />
-          {% endfor %}
-        </svg>
-      </div>
+    <!-- Loading overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div style="font-size: 2rem; color: var(--color-primary); margin-bottom: 1rem;">📅</div>
+            <h2 style="margin-bottom: 0.5rem;">Loading Release Plan...</h2>
+            <p style="color: var(--color-text-muted);">{{ plan_name }}</p>
+        </div>
     </div>
-  </div>
+    
+    <!-- Include header component -->
+    {% include 'components/header.j2' %}
+    
+    <div class="app-container">
+        <!-- Include sidebar component -->
+        {% include 'components/sidebar.j2' %}
+        
+        <!-- Main content area -->
+        <main class="main-content">
+            <!-- Page header -->
+            <div class="page-header">
+                <div class="page-title">
+                    <h1>{{ plan_name }} <span class="badge">{{ project }}</span></h1>
+                    <div class="page-meta">
+                        <span>Owner: {{ owner }}</span>
+                        <span style="margin: 0 0.5rem;">•</span>
+                        <span>Generated: {{ generated_at }}</span>
+                        <span style="margin: 0 0.5rem;">•</span>
+                        <span>Reference date: {{ reference_date }}</span>
+                    </div>
+                </div>
+                <div class="page-controls">
+                    <div class="control-group">
+                        <button class="btn btn-outline filter-btn" id="filterBtn">
+                            <span>Filter</span>
+                        </button>
+                        <button class="btn btn-outline export-btn" id="exportBtn">
+                            <span>Export</span>
+                        </button>
+                        <button class="btn btn-primary fullscreen-btn" id="fullscreenBtn">
+                            <span>Full screen</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Timeline container -->
+            <div class="timeline-container">
+                <!-- Timeline controls -->
+                <div class="timeline-controls">
+                    <div class="zoom-controls">
+                        <span style="font-size: var(--font-size-sm); font-weight: 500; color: var(--color-text-muted); margin-right: var(--spacing-sm);">Zoom:</span>
+                        {% for zoom_key, zoom_data in zoom_levels.items() %}
+                        <button class="zoom-btn {% if zoom_key == '6m' %}active{% endif %}" data-zoom="{{ zoom_key }}">
+                            {{ zoom_data.label }}
+                        </button>
+                        {% endfor %}
+                    </div>
+                    <div class="control-group">
+                        <label for="panToggle">Pan:</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="panToggle" checked>
+                            <label for="panToggle"></label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Timeline wrapper -->
+                <div class="timeline-wrapper">
+                    <!-- SVG timeline rendered by backend -->
+                    {% include 'plan.svg.j2' %}
+                    
+                    <!-- Tooltip container -->
+                    <div class="tooltip" id="timelineTooltip"></div>
+                </div>
+            </div>
+            
+            <!-- Legend -->
+            {% include 'components/legend.j2' %}
+        </main>
+    </div>
+    
+    <!-- JavaScript data -->
+    <script id="plan-data" type="application/json">
+        {
+            "plan": {
+                "name": "{{ plan_name }}",
+                "project": "{{ project }}",
+                "referenceDate": "{{ reference_date }}"
+            },
+            "zoomLevels": {
+                {% for zoom_key, zoom_data in zoom_levels.items() %}
+                "{{ zoom_key }}": {
+                    "windowStart": "{{ zoom_data.window_start }}",
+                    "windowEnd": "{{ zoom_data.window_end }}",
+                    "label": "{{ zoom_data.label }}"
+                }{% if not loop.last %},{% endif %}
+                {% endfor %}
+            },
+            "sidebarMetrics": {
+                "cycleWindow": {{ sidebar_metrics.cycle_window|tojson }},
+                "nextMajorRelease": {{ sidebar_metrics.next_major_release|tojson }},
+                "upcomingDeadline": {{ sidebar_metrics.upcoming_deadline|tojson }},
+                "activeSprint": {{ sidebar_metrics.active_sprint|tojson }}
+            },
+            "timeline": {
+                "width": {{ render_model.width }},
+                "height": {{ render_model.height }},
+                "weeks": {{ render_model.weeks|tojson }},
+                "months": {{ render_model.months|tojson }},
+                "pulses": {{ render_model.pulses|tojson }},
+                "lanes": {{ render_model.lanes|tojson }},
+                "links": {{ render_model.links|tojson }}
+            }
+        }
+    </script>
+    
+    <!-- JavaScript Files -->
+    <script src="static/js/app.js"></script>
+    <script src="static/js/timeline.js"></script>
+    <script src="static/js/zoom.js"></script>
+    <script src="static/js/filters.js"></script>
+    
+    <script>
+        // Quick inline script to hide loading overlay
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                document.getElementById('loadingOverlay').classList.add('fade-out');
+                setTimeout(function() {
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                }, 300);
+            }, 500);
+        });
+    </script>
 </body>
 </html>

@@ -1,0 +1,48 @@
+{# header.j2 - Main navigation header component #}
+<header class="app-header">
+    <div class="header-left">
+        <div class="brand">
+            <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+            <span class="brand-name">snapd</span>
+        </div>
+        <nav class="main-nav">
+            <a href="#" class="nav-link">Roadmap</a>
+            <a href="#" class="nav-link active">Releases</a>
+            <a href="#" class="nav-link">Sprints</a>
+            <a href="#" class="nav-link">Calendar</a>
+            <a href="#" class="nav-link">Reports</a>
+        </nav>
+    </div>
+    <div class="header-right">
+        <div class="search-bar">
+            <input type="text" placeholder="Search releases, deadlines..." />
+        </div>
+        <button class="icon-button" aria-label="Notifications">🔔</button>
+        <button class="icon-button user-profile" aria-label="User Profile">UN</button>
+    </div>
+</header>
+
+{# Fullscreen header (hidden by default) #}
+<header class="fullscreen-header">
+    <div class="header-left">
+        <div class="brand">
+            <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+            <span class="brand-name">snapd</span>
+        </div>
+        <div class="page-title">
+            <h1>{{ plan_name }}</h1>
+        </div>
+        <div class="text-muted" style="font-size: var(--font-size-sm); margin-left: var(--spacing-md);">
+            <small>Esc to exit</small>
+        </div>
+    </div>
+    <div class="header-right">
+        <button class="btn btn-outline exit-fullscreen-btn">
+            <span>Exit full screen</span>
+        </button>
+    </div>
+</header>

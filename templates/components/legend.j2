@@ -1,0 +1,70 @@
+{# legend.j2 - Detailed legend component #}
+<div class="legend-container">
+    <div class="legend-grid">
+        <div class="legend-category">
+            <h3>Timeline Items</h3>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <span class="legend-color release"></span>
+                    <span class="legend-label">Release – Feature release window</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color release" style="opacity: 0.7;"></span>
+                    <span class="legend-label">Release – Bugfix/security update</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color deadline marker"></span>
+                    <span class="legend-label">Deadline – Critical date</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color holiday"></span>
+                    <span class="legend-label">Holiday – Team unavailable</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color sprint"></span>
+                    <span class="legend-label">Sprint – Development period</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="legend-category">
+            <h3>Time Grid</h3>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <span class="legend-color pulse"></span>
+                    <span class="legend-label">Pulse – 2-week development cycle</span>
+                </div>
+                <div class="legend-item">
+                    <span style="display: inline-block; width: 12px; height: 12px; border: 1px solid var(--color-border); border-radius: var(--radius-sm);"></span>
+                    <span class="legend-label">Week – Calendar week</span>
+                </div>
+                <div class="legend-item">
+                    <span style="display: inline-block; width: 12px; height: 12px; background: #e8eff7; border: 1px solid #cbd7e5; border-radius: var(--radius-sm);"></span>
+                    <span class="legend-label">Month – Calendar month</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="legend-category">
+            <h3>Actions</h3>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <span style="color: var(--color-primary); font-weight: bold;">↔</span>
+                    <span class="legend-label">Drag to pan timeline</span>
+                </div>
+                <div class="legend-item">
+                    <span style="color: var(--color-primary); font-weight: bold;">⌘+</span>
+                    <span class="legend-label">Zoom in/out (Ctrl+ on Windows)</span>
+                </div>
+                <div class="legend-item">
+                    <span style="color: var(--color-primary); font-weight: bold;">🖱️</span>
+                    <span class="legend-label">Hover for details</span>
+                </div>
+                <div class="legend-item">
+                    <span style="color: var(--color-deadline); font-weight: bold;">⟶</span>
+                    <span class="legend-label">Release → Deadline dependency</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

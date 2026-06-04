@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import calendar
+import shutil
 from datetime import date, datetime, timedelta
 import math
 from pathlib import Path
@@ -43,6 +44,11 @@ def parse_args() -> argparse.Namespace:
         "--svg-template",
         default=str(root / "templates" / "plan.svg.j2"),
         help="Path to Jinja2 SVG template.",
+    )
+    parser.add_argument(
+        "--reference-date",
+        default=date.today().isoformat(),
+        help="Reference date for calculating metrics (YYYY-MM-DD, default: today)",
     )
     return parser.parse_args()
 
@@ -520,6 +526,182 @@ def build_plan(plan: dict[str, Any]) -> dict[str, Any]:
             "end_week": pulse_end_week,
         },
     }
+
+
+def calculate_sidebar_metrics(
+    built_plan: dict[str, Any], reference_date: date
+) -> dict[str, Any]:
+    """Calculate metrics for sidebar display."""
+    window = built_plan["window"]
+    window_start = window["window_start"]
+    window_end = window["window_end"]
+    releases = built_plan["releases"]
+    deadlines = built_plan["deadlines"]
+    sprints = built_plan["sprints"]
+    
+    # Calculate cycle window info
+    cycle_window_start = window_start
+    cycle_window_end = window_end
+    cycle_duration_weeks = window["base_weeks"]
+    cycle_duration_days = window["exact_days"]
+    
+    # Find next major release (first release after reference_date)
+    next_major_release = None
+    for release in releases:
+        if release["start"] >= reference_date:
+            next_major_release = release
+            break
+    
+    if next_major_release is None and releases:
+        # If no future releases, show the last one
+        next_major_release = releases[-1]
+    
+    # Find upcoming deadline (closest deadline after reference_date)
+    upcoming_deadline = None
+    for deadline in deadlines:
+        if deadline["start"] >= reference_date:
+            upcoming_deadline = deadline
+            break
+    
+    # Find active sprint (sprint that contains reference_date or next one)
+    active_sprint = None
+    for sprint in sprints:
+        sprint_start = sprint["start"]
+        sprint_end = event_end_date(sprint_start, sprint["duration_weeks"])
+        if sprint_start <= reference_date <= sprint_end:
+            active_sprint = sprint
+            break
+    
+    if active_sprint is None and sprints:
+        # If no current sprint, show the next one
+        for sprint in sprints:
+            sprint_start = sprint["start"]
+            sprint_end = event_end_date(sprint_start, sprint["duration_weeks"])
+            if sprint_start >= reference_date:
+                active_sprint = sprint
+                break
+    
+    if active_sprint is None and sprints:
+        # If no future sprints, show the last one
+        active_sprint = sprints[-1]
+    
+    # Format dates for display
+    def format_date_range(start_date: date, end_date: date) -> str:
+        if start_date.month == end_date.month and start_date.year == end_date.year:
+            return f"{start_date.strftime('%b %d')} - {end_date.strftime('%d, %Y')}"
+        else:
+            return f"{start_date.strftime('%b %d, %Y')} - {end_date.strftime('%b %d, %Y')}"
+    
+    def format_date_simple(date_obj: date) -> str:
+        return date_obj.strftime("%b %d, %Y")
+    
+    # Helper to get end date from start and duration
+    def get_end_date(start_date: date, duration_weeks: int) -> date:
+        return event_end_date(start_date, duration_weeks)
+    
+    metrics = {
+        "cycle_window": {
+            "start": format_date_simple(cycle_window_start),
+            "end": format_date_simple(cycle_window_end),
+            "duration_weeks": cycle_duration_weeks,
+            "duration_days": cycle_duration_days,
+            "text": f"{format_date_simple(cycle_window_start)} – {format_date_simple(cycle_window_end)}",
+        },
+        "next_major_release": {
+            "version": next_major_release["name"] if next_major_release else "None",
+            "purpose": next_major_release.get("purpose", "") if next_major_release else "",
+            "start": format_date_simple(next_major_release["start"]) if next_major_release else "",
+            "end": format_date_simple(get_end_date(next_major_release["start"], next_major_release["duration_weeks"])) if next_major_release else "",
+            "date_range": (
+                format_date_range(
+                    next_major_release["start"],
+                    get_end_date(next_major_release["start"], next_major_release["duration_weeks"])
+                )
+                if next_major_release
+                else ""
+            ),
+        },
+        "upcoming_deadline": {
+            "name": upcoming_deadline["label"] if upcoming_deadline else "None",
+            "date": format_date_simple(upcoming_deadline["start"]) if upcoming_deadline else "",
+            "days_until": (
+                (upcoming_deadline["start"] - reference_date).days
+                if upcoming_deadline
+                else None
+            ),
+        },
+        "active_sprint": {
+            "name": active_sprint["label"] if active_sprint else "None",
+            "start": format_date_simple(active_sprint["start"]) if active_sprint else "",
+            "end": format_date_simple(get_end_date(active_sprint["start"], active_sprint["duration_weeks"])) if active_sprint else "",
+            "date_range": (
+                format_date_range(active_sprint["start"], get_end_date(active_sprint["start"], active_sprint["duration_weeks"]))
+                if active_sprint
+                else ""
+            ),
+        },
+    }
+    
+    return metrics
+
+
+def calculate_zoom_levels(
+    window: dict[str, Any],
+    releases: list[dict[str, Any]],
+    sprints: list[dict[str, Any]],
+    reference_date: date,
+) -> dict[str, Any]:
+    """Calculate data for different zoom levels."""
+    window_start = window["window_start"]
+    window_end = window["window_end"]
+    
+    # Find overall bounds from all events
+    all_starts = [window_start]
+    all_ends = [window_end]
+    
+    for release in releases:
+        all_starts.append(release["start"])
+        all_ends.append(event_end_date(release["start"], release["duration_weeks"]))
+    
+    for sprint in sprints:
+        sprint_start = sprint["start"]
+        sprint_end = event_end_date(sprint_start, sprint["duration_weeks"])
+        all_starts.append(sprint_start)
+        all_ends.append(sprint_end)
+    
+    overall_start = min(all_starts)
+    overall_end = max(all_ends)
+    
+    # Calculate different zoom levels
+    zoom_levels = {
+        "fit": {
+            "window_start": window_start,
+            "window_end": window_end,
+            "label": "Fit",
+        },
+        "3m": {
+            "window_start": reference_date,
+            "window_end": reference_date + timedelta(days=3 * 30),  # Approximate 3 months
+            "label": "3M",
+        },
+        "6m": {
+            "window_start": reference_date,
+            "window_end": reference_date + timedelta(days=6 * 30),  # Approximate 6 months
+            "label": "6M",
+        },
+        "12m": {
+            "window_start": reference_date,
+            "window_end": reference_date + timedelta(days=12 * 30),  # Approximate 12 months
+            "label": "12M",
+        },
+        "all": {
+            "window_start": overall_start,
+            "window_end": overall_end,
+            "label": "All",
+        },
+    }
+    
+    return zoom_levels
 
 
 def event_end_date(start: date, duration_weeks: int) -> date:
@@ -1111,6 +1293,24 @@ def main() -> None:
     plan = read_yaml(input_file)
     built_plan = build_plan(plan)
     render_model = build_render_model(built_plan)
+    
+    # Parse reference date
+    try:
+        reference_date = datetime.fromisoformat(args.reference_date).date()
+    except ValueError:
+        print(f"Warning: Invalid reference date '{args.reference_date}', using today")
+        reference_date = date.today()
+    
+    # Calculate sidebar metrics
+    sidebar_metrics = calculate_sidebar_metrics(built_plan, reference_date)
+    
+    # Calculate zoom levels
+    zoom_levels = calculate_zoom_levels(
+        built_plan["window"],
+        built_plan["releases"],
+        built_plan["sprints"],
+        reference_date,
+    )
 
     context = {
         "project": plan.get("project", "unknown"),
@@ -1122,6 +1322,9 @@ def main() -> None:
         "sprints": built_plan["sprints"],
         "holidays": built_plan["holidays"],
         "render_model": render_model,
+        "sidebar_metrics": sidebar_metrics,
+        "zoom_levels": zoom_levels,
+        "reference_date": reference_date.isoformat(),
         "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     }
     html = render_html(template_file, context)
@@ -1129,6 +1332,12 @@ def main() -> None:
     output_file.parent.mkdir(parents=True, exist_ok=True)
     output_file.write_text(html, encoding="utf-8")
     print(f"Generated release plan: {output_file}")
+
+    # Copy static assets to output directory
+    static_src = Path(__file__).parent / "static"
+    static_dst = output_file.parent / "static"
+    if static_src.exists():
+        shutil.copytree(static_src, static_dst, dirs_exist_ok=True)
 
     svg_template_file = Path(args.svg_template)
     svg_output_file = Path(args.svg)

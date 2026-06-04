@@ -1,10 +1,11 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <svg
+  class="timeline-svg"
   width="3216"
   height="814"
   xmlns="http://www.w3.org/2000/svg"
   role="img"
   aria-label="Release timeline"
+  id="timelineSvg"
 >
   <style>
     .timeline-svg {
@@ -27,10 +28,32 @@
     .item.sprint { fill: #0f74a8; stroke: #075985; }
     .item.release { fill: #6d28d9; stroke: #5b21b6; }
     .item.holiday { fill: #b66516; stroke: #8a4a0f; }
-    .milestone-deadline { fill: #be123c; stroke: #9f1239; stroke-width: 1.5; }
+    /* Enhanced deadline styling */
+    .milestone-deadline { 
+      fill: #be123c; 
+      stroke: #9f1239; 
+      stroke-width: 1.5;
+      filter: url(#deadline-glow);
+    }
+    .milestone-deadline:hover { 
+      fill: #dc2626; 
+      stroke: #991b1b; 
+      stroke-width: 2;
+    }
+    .deadline-label { 
+      fill: #7f1d1d; 
+      font-size: 11px; 
+      font-weight: 700;
+      font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+    }
+    .deadline-label-date { 
+      fill: #9f1239; 
+      font-size: 10px; 
+      font-weight: 600;
+      font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+    }
     .item-label-inside { fill: #ffffff; font-size: 12px; font-weight: 700; pointer-events: none; font-family: "IBM Plex Sans", "Segoe UI", sans-serif; }
     .item-label-centered { text-anchor: middle; }
-    .deadline-label { fill: #7f1d1d; }
     .link-line { stroke-width: 1.8; stroke-dasharray: 4 3; fill: none; opacity: 0.9; }
   </style>
 
@@ -40,6 +63,18 @@
     <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
       <path d="M0,0 L8,3 L0,6 z" fill="context-stroke" />
     </marker>
+    
+    <!-- Glow effect for deadlines -->
+    <filter id="deadline-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur"/>
+      <feOffset in="blur" dx="0" dy="0" result="offsetBlur"/>
+      <feFlood flood-color="#be123c" flood-opacity="0.3" result="glowColor"/>
+      <feComposite in="glowColor" in2="offsetBlur" operator="in" result="softGlow"/>
+      <feMerge>
+        <feMergeNode in="softGlow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   </defs>
 
   <rect class="row-label-bg" x="0" y="18" width="170" height="38" />

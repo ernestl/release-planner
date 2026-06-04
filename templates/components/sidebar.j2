@@ -1,0 +1,93 @@
+{# sidebar.j2 - Left sidebar with metrics and legend #}
+<aside class="sidebar">
+    <div class="sidebar-section">
+        <h3 class="sidebar-heading">
+            <span class="icon">📅</span>
+            Cycle Window
+        </h3>
+        <div class="date-range">
+            <strong>{{ sidebar_metrics.cycle_window.text }}</strong>
+            <p class="muted">{{ sidebar_metrics.cycle_window.duration_weeks }} weeks ({{ sidebar_metrics.cycle_window.duration_days }} days)</p>
+        </div>
+    </div>
+    
+    {# Next Major Release Card #}
+    <div class="sidebar-card card-primary">
+        <div class="card-icon">🚀</div>
+        <div class="card-content">
+            <h4>NEXT MAJOR RELEASE</h4>
+            <p class="version">{{ sidebar_metrics.next_major_release.version }}</p>
+            <p class="date-range">{{ sidebar_metrics.next_major_release.date_range }}</p>
+            {% if sidebar_metrics.next_major_release.purpose %}
+                <p class="text-muted" style="font-size: var(--font-size-xs); margin-top: var(--spacing-xs);">
+                    {{ sidebar_metrics.next_major_release.purpose }}
+                </p>
+            {% endif %}
+        </div>
+    </div>
+    
+    {# Upcoming Deadline Card #}
+    {% if sidebar_metrics.upcoming_deadline.name != "None" %}
+    <div class="sidebar-card card-warning">
+        <div class="card-icon">⏰</div>
+        <div class="card-content">
+            <h4>UPCOMING DEADLINE</h4>
+            <p class="version">{{ sidebar_metrics.upcoming_deadline.name }}</p>
+            <p class="date-range">{{ sidebar_metrics.upcoming_deadline.date }}</p>
+            {% if sidebar_metrics.upcoming_deadline.days_until is not none %}
+            <div class="countdown">
+                <div class="countdown-number">{{ sidebar_metrics.upcoming_deadline.days_until }}</div>
+                <div class="countdown-label">days</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+    
+    {# Active Sprint Card #}
+    {% if sidebar_metrics.active_sprint.name != "None" %}
+    <div class="sidebar-card card-info">
+        <div class="card-icon">🏃</div>
+        <div class="card-content">
+            <h4>ACTIVE SPRINT</h4>
+            <p class="version">{{ sidebar_metrics.active_sprint.name }}</p>
+            <p class="date-range">{{ sidebar_metrics.active_sprint.date_range }}</p>
+            <div class="status-badge active">Active</div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {# Legend #}
+    <div class="legend">
+        <h3 class="legend-title">
+            <span>🗺️</span>
+            LEGEND
+        </h3>
+        <div class="legend-items">
+            <div class="legend-item">
+                <span class="legend-color release"></span>
+                <span class="legend-label">Releases</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-color deadline"></span>
+                <span class="legend-label">Deadlines</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-color holiday"></span>
+                <span class="legend-label">Holidays</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-color sprint"></span>
+                <span class="legend-label">Sprints</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-color pulse"></span>
+                <span class="legend-label">Pulse (P#)</span>
+            </div>
+        </div>
+    </div>
+</aside>
+
+<button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+    ☰
+</button>

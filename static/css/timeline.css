@@ -1,0 +1,637 @@
+/* timeline.css - Timeline visualization styles */
+
+/* Timeline Container */
+.timeline-container {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+    margin-bottom: var(--spacing-xl);
+}
+
+/* Timeline Controls */
+.timeline-controls {
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--color-surface);
+}
+
+.zoom-controls {
+    display: flex;
+    gap: var(--spacing-xs);
+    align-items: center;
+}
+
+.zoom-btn {
+    padding: var(--spacing-xs) var(--spacing-md);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    min-width: 48px;
+    text-align: center;
+}
+
+.zoom-btn:hover {
+    background: var(--color-bg);
+    border-color: var(--color-text-light);
+}
+
+.zoom-btn.active {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.control-group label {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    font-weight: 500;
+}
+
+/* Timeline Wrapper */
+.timeline-wrapper {
+    position: relative;
+    overflow-x: auto;
+    background: var(--color-surface);
+    padding: var(--spacing-lg);
+    min-height: 600px;
+}
+
+.timeline-svg {
+    display: block;
+    background: var(--color-surface);
+    font-family: var(--font-family);
+}
+
+/* Timeline Grid */
+.timeline-grid {
+    pointer-events: none;
+}
+
+/* Row Backgrounds */
+.row-label-bg {
+    fill: var(--color-bg);
+}
+
+.row-label-text {
+    fill: var(--color-text);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    font-family: var(--font-family);
+}
+
+/* Month Row */
+.month-cell {
+    fill: #e8eff7;
+    stroke: #cbd7e5;
+    stroke-width: 1;
+}
+
+.month-text {
+    fill: #223142;
+    font-size: 12px;
+    font-weight: 700;
+    text-anchor: middle;
+    font-family: var(--font-family);
+}
+
+/* Week Row */
+.week-cell {
+    fill: var(--color-surface);
+    stroke: var(--color-border);
+    stroke-width: 1;
+}
+
+.week-text {
+    fill: var(--color-text);
+    font-size: 10px;
+    font-weight: 600;
+    font-family: var(--font-family);
+}
+
+.week-text-top {
+    text-anchor: middle;
+}
+
+.week-number {
+    font-weight: 700;
+    fill: var(--color-text);
+}
+
+.week-date-range {
+    fill: var(--color-text-muted);
+}
+
+/* Pulse Row */
+.pulse-cell {
+    fill: #d9efe9;
+    stroke: #a9d7cc;
+    stroke-width: 1;
+}
+
+.pulse-text {
+    fill: #145a4d;
+    font-size: 12px;
+    font-weight: 700;
+    text-anchor: middle;
+    dominant-baseline: middle;
+    font-family: var(--font-family);
+}
+
+/* Week Dividers */
+.week-divider {
+    stroke: var(--color-border);
+    stroke-width: 1;
+    opacity: 0.5;
+}
+
+/* Lane Bands */
+.lane-band {
+    fill: var(--color-bg);
+    stroke: var(--color-border);
+    stroke-width: 1;
+    rx: 8;
+}
+
+.lane-name {
+    fill: var(--color-text);
+    font-size: 14px;
+    font-weight: 700;
+    font-family: var(--font-family);
+}
+
+/* Release Items */
+.item.release {
+    stroke-width: 1;
+    fill-opacity: 0.96;
+    rx: 6;
+}
+
+.item.release.start {
+    fill: #8b5cf6;
+    stroke: #7c3aed;
+}
+
+.item.release.mid {
+    fill: #7c3aed;
+    stroke: #6d28d9;
+}
+
+.item.release.end {
+    fill: #6d28d9;
+    stroke: #5b21b6;
+}
+
+.item.release:hover {
+    stroke-width: 2;
+    filter: brightness(1.1);
+}
+
+/* Deadline Items */
+.milestone-deadline {
+    fill: var(--color-deadline);
+    stroke: #9f1239;
+    stroke-width: 1.5;
+}
+
+.milestone-deadline:hover {
+    stroke-width: 2;
+    filter: brightness(1.1);
+}
+
+.deadline-diamond {
+    pointer-events: all;
+    cursor: pointer;
+}
+
+/* Deadline Labels */
+.deadline-label-container {
+    pointer-events: none;
+}
+
+.deadline-version {
+    fill: var(--color-deadline);
+    font-size: 11px;
+    font-weight: 700;
+    text-anchor: middle;
+    font-family: var(--font-family);
+}
+
+.deadline-type {
+    fill: var(--color-deadline);
+    font-size: 10px;
+    font-weight: 500;
+    text-anchor: middle;
+    font-family: var(--font-family);
+}
+
+.deadline-date {
+    fill: var(--color-text-muted);
+    font-size: 9px;
+    font-weight: 500;
+    text-anchor: middle;
+    font-family: var(--font-family);
+}
+
+/* Holiday Items */
+.item.holiday {
+    fill: var(--color-holiday);
+    stroke: #ea580c;
+    stroke-width: 1;
+    fill-opacity: 0.96;
+    rx: 6;
+}
+
+.item.holiday:hover {
+    stroke-width: 2;
+    filter: brightness(1.1);
+}
+
+/* Sprint Items */
+.item.sprint {
+    fill: var(--color-sprint);
+    stroke: #0369a1;
+    stroke-width: 1;
+    fill-opacity: 0.96;
+    rx: 6;
+}
+
+.item.sprint:hover {
+    stroke-width: 2;
+    filter: brightness(1.1);
+}
+
+/* Item Labels */
+.item-label-inside {
+    fill: white;
+    font-size: 12px;
+    font-weight: 700;
+    pointer-events: none;
+    font-family: var(--font-family);
+}
+
+.item-label-centered {
+    text-anchor: middle;
+}
+
+.item-label-outside {
+    fill: var(--color-text);
+    font-size: 11px;
+    font-weight: 500;
+    pointer-events: none;
+    font-family: var(--font-family);
+}
+
+/* Link Lines */
+.link-line {
+    stroke-width: 1.8;
+    stroke-dasharray: 4 3;
+    fill: none;
+    opacity: 0.9;
+    pointer-events: none;
+}
+
+.link-line:hover {
+    stroke-width: 2.2;
+    opacity: 1;
+}
+
+/* Dependency Arrows */
+.marker-arrow {
+    fill: context-stroke;
+}
+
+/* Tooltips */
+.tooltip {
+    position: absolute;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-sm);
+    color: var(--color-text);
+    box-shadow: var(--shadow-lg);
+    pointer-events: none;
+    z-index: 1000;
+    max-width: 300px;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.tooltip.visible {
+    opacity: 1;
+}
+
+.tooltip-header {
+    font-weight: 700;
+    margin-bottom: var(--spacing-xs);
+    color: var(--color-primary);
+}
+
+.tooltip-dates {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
+    margin-bottom: var(--spacing-xs);
+}
+
+.tooltip-description {
+    font-size: var(--font-size-sm);
+    line-height: 1.4;
+}
+
+/* Legend Container */
+.legend-container {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    padding: var(--spacing-md);
+    margin-top: var(--spacing-lg);
+}
+
+.legend-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-lg);
+}
+
+.legend-category {
+    flex: 1;
+    min-width: 150px;
+}
+
+.legend-category h3 {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+    margin-bottom: var(--spacing-sm);
+}
+
+.legend-items {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+}
+
+.legend-color.release {
+    background: var(--color-primary);
+}
+
+.legend-color.deadline {
+    background: var(--color-deadline);
+}
+
+.legend-color.holiday {
+    background: var(--color-holiday);
+}
+
+.legend-color.sprint {
+    background: var(--color-sprint);
+}
+
+.legend-color.pulse {
+    background: var(--color-pulse);
+}
+
+/* Timeline Controls Panel */
+.timeline-panel {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    padding: var(--spacing-lg);
+    margin-top: var(--spacing-lg);
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+}
+
+.panel-title {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.panel-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: center;
+}
+
+/* Filter Controls */
+.filter-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-md);
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.filter-label {
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--color-text);
+}
+
+.filter-checkboxes {
+    display: flex;
+    gap: var(--spacing-md);
+}
+
+.filter-checkbox {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+}
+
+.filter-checkbox input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+/* Fullscreen Mode */
+.fullscreen .timeline-container {
+    border: none;
+    border-radius: 0;
+    margin: 0;
+    height: 100vh;
+}
+
+.fullscreen .timeline-wrapper {
+    height: calc(100vh - 64px);
+    padding: var(--spacing-lg);
+}
+
+.fullscreen .timeline-controls {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: var(--color-surface);
+    z-index: 100;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.fullscreen .timeline-wrapper {
+    padding-top: calc(64px + var(--spacing-lg));
+}
+
+/* Timeline Scrollbar */
+.timeline-wrapper::-webkit-scrollbar {
+    height: 8px;
+}
+
+.timeline-wrapper::-webkit-scrollbar-track {
+    background: var(--color-bg);
+    border-radius: var(--radius-full);
+}
+
+.timeline-wrapper::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: var(--radius-full);
+}
+
+.timeline-wrapper::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-light);
+}
+
+/* Animation for zoom transitions */
+.timeline-svg {
+    transition: transform 0.3s ease;
+}
+
+/* Loading State for Timeline */
+.timeline-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-lg);
+}
+
+.timeline-loading::after {
+    content: '📈';
+    font-size: 3rem;
+    opacity: 0.3;
+    margin-left: var(--spacing-md);
+}
+
+/* Empty State for Timeline */
+.timeline-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    text-align: center;
+    padding: var(--spacing-2xl);
+    color: var(--color-text-muted);
+}
+
+.timeline-empty .icon {
+    font-size: 4rem;
+    margin-bottom: var(--spacing-lg);
+    opacity: 0.2;
+}
+
+.timeline-empty h3 {
+    font-size: var(--font-size-xl);
+    margin-bottom: var(--spacing-sm);
+    color: var(--color-text);
+}
+
+.timeline-empty p {
+    font-size: var(--font-size-base);
+    line-height: 1.5;
+    max-width: 400px;
+}
+
+/* Responsive Timeline */
+@media (max-width: 1024px) {
+    .timeline-controls {
+        flex-direction: column;
+        gap: var(--spacing-md);
+        align-items: stretch;
+    }
+    
+    .control-group {
+        justify-content: space-between;
+    }
+}
+
+@media (max-width: 768px) {
+    .timeline-wrapper {
+        padding: var(--spacing-md);
+    }
+    
+    .legend-grid {
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+    
+    .filter-controls {
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+}
+
+/* Print Styles */
+@media print {
+    .timeline-controls,
+    .timeline-panel,
+    .legend-container {
+        display: none !important;
+    }
+    
+    .timeline-wrapper {
+        padding: 0;
+        overflow: visible !important;
+    }
+    
+    .timeline-svg {
+        width: 100% !important;
+        height: auto !important;
+    }
+}
