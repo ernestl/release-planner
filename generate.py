@@ -16,13 +16,23 @@ from typing import Any
 import yaml
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
+# One hue per release pack, in first-seen order. Bugfix and security use lighter steps.
+RELEASE_PACK_PALETTE = [
+    ("#5b21b6", "#4c1d95"),
+    ("#1d4ed8", "#1e40af"),
+    ("#0f766e", "#115e59"),
+    ("#be185d", "#9d174d"),
+    ("#b45309", "#92400e"),
+    ("#047857", "#065f46"),
+]
+
 
 def parse_args() -> argparse.Namespace:
     root = Path(__file__).parent
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--input",
-        default=str(root / "data" / "snapd-2026-h1.yaml"),
+        default=str(root / "data" / "snapd-27.04.yaml"),
         help="Path to release-plan YAML file.",
     )
     parser.add_argument(
@@ -90,7 +100,11 @@ def shift_months(input_date: date, months: int) -> date:
     return date(year, month, day)
 
 
-def compute_window(cycle: str) -> dict[str, Any]:
+def compute_window(cycle: str, plan: dict[str, Any] | None = None) -> dict[str, Any]:
+    explicit = (plan or {}).get("window")
+    if isinstance(explicit, dict) and explicit.get("start") and explicit.get("end"):
+        return _explicit_window(cycle, explicit)
+
     year, month = parse_cycle(cycle)
     month_last_day = calendar.monthrange(year, month)[1]
     cycle_end = date(year, month, month_last_day)
@@ -114,6 +128,45 @@ def compute_window(cycle: str) -> dict[str, Any]:
         "exact_start": six_month_start,
         "base_weeks": rounded_weeks,
         "exact_days": exact_days,
+        "explicit": False,
+    }
+
+
+def _explicit_window(cycle: str, raw: dict[str, Any]) -> dict[str, Any]:
+    """Chart a declared cycle, with optional whole weeks of padding on each side."""
+    year, month = parse_cycle(cycle)
+    cycle_start = parse_date_value(str(raw.get("start", "")))
+    cycle_end = parse_date_value(str(raw.get("end", "")))
+    if cycle_start.weekday() != 0:
+        raise ValueError("window.start must be a Monday.")
+    if cycle_end < cycle_start:
+        raise ValueError("window.end must be on or after window.start.")
+
+    pad_before = int(raw.get("pad_before_weeks", 0))
+    pad_after = int(raw.get("pad_after_weeks", 0))
+    if pad_before < 0 or pad_after < 0:
+        raise ValueError("window padding must be >= 0.")
+
+    cycle_last_monday = cycle_end - timedelta(days=cycle_end.weekday())
+    cycle_weeks = ((cycle_last_monday - cycle_start).days // 7) + 1
+    window_start = cycle_start - timedelta(days=pad_before * 7)
+    # Include the week that contains cycle_end, then pad_after further weeks.
+    window_end = cycle_last_monday + timedelta(days=(1 + pad_after) * 7 - 1)
+    chart_weeks = ((window_end - window_start).days + 1) // 7
+
+    return {
+        "cycle": cycle,
+        "year": year,
+        "month": month,
+        "window_start": window_start,
+        "window_end": window_end,
+        "cycle_start": cycle_start,
+        "cycle_end": cycle_end,
+        "cycle_weeks": cycle_weeks,
+        "exact_start": cycle_start,
+        "base_weeks": chart_weeks,
+        "exact_days": (cycle_end - cycle_start).days + 1,
+        "explicit": True,
     }
 
 
@@ -138,10 +191,23 @@ def first_monday_of_year(year: int) -> date:
     return jan1 + timedelta(days=(7 - jan1.weekday()) % 7)
 
 
-def resolve_event_start(event: dict[str, Any], year: int) -> date | None:
+def resolve_week_start(week: int, year: int, cycle_start: date | None = None) -> date:
+    """Calendar business week, or a cycle week counted from cycle_start."""
+    if cycle_start is not None:
+        if week < 1:
+            raise ValueError(f"Cycle week must be >= 1, got {week}.")
+        return cycle_start + timedelta(days=(week - 1) * 7)
+    return week_start_date(year, week)
+
+
+def resolve_event_start(
+    event: dict[str, Any],
+    year: int,
+    cycle_start: date | None = None,
+) -> date | None:
     kind = str(event.get("kind", "")).strip()
     if kind == "by-week":
-        return week_start_date(year, int(event.get("week")))
+        return resolve_week_start(int(event.get("week")), year, cycle_start)
     if kind == "by-month-final-week":
         return month_final_week_start(year, int(event.get("month")))
     if kind == "by-date":
@@ -179,6 +245,7 @@ def normalize_named_events(
     window_start: date,
     window_end: date,
     constrain_to_window: bool = True,
+    cycle_start: date | None = None,
 ) -> list[dict[str, Any]]:
     normalized: list[dict[str, Any]] = []
     section_lower = section.lower()
@@ -196,18 +263,25 @@ def normalize_named_events(
         if not name:
             raise ValueError(f"Each {section.lower()} entry must include a non-empty name.")
 
-        duration_weeks = int(raw.get("duration", 1))
-        if duration_weeks <= 0:
-            raise ValueError(f"{section} '{name}' must have duration > 0.")
-
-        start = resolve_event_start(raw, year)
+        start = resolve_event_start(raw, year, cycle_start)
         if start is None:
             continue
 
-        if constrain_to_window and not within_window(start, duration_weeks, window_start, window_end):
-            continue
+        end_text = str(raw.get("end", "")).strip()
+        if end_text:
+            end = parse_date_value(end_text)
+            if end < start:
+                raise ValueError(f"{section} '{name}' end date is before its start date.")
+            span_days = (end - start).days + 1
+            duration_weeks = max(1, (span_days + 6) // 7)
+        else:
+            duration_weeks = int(raw.get("duration", 1))
+            if duration_weeks <= 0:
+                raise ValueError(f"{section} '{name}' must have duration > 0.")
+            end = event_end_date(start, duration_weeks)
 
-        end = event_end_date(start, duration_weeks)
+        if constrain_to_window and (end < window_start or start > window_end):
+            continue
 
         normalized.append(
             {
@@ -217,6 +291,7 @@ def normalize_named_events(
                 "range_label": f"{start.strftime('%d-%m')} to {end.strftime('%d-%m')}",
                 "section": section,
                 "start": start,
+                "end": end,
                 "duration_weeks": duration_weeks,
             }
         )
@@ -231,7 +306,7 @@ def stretch_window_to_events(window: dict[str, Any], events: list[dict[str, Any]
     end_bound = window["window_end"]
 
     event_starts = [event["start"] for event in events]
-    event_ends = [event_end_date(event["start"], int(event["duration_weeks"])) for event in events]
+    event_ends = [resolve_event_end(event) for event in events]
 
     stretched_start = min([start_bound, *event_starts])
     stretched_end = max([end_bound, *event_ends])
@@ -250,6 +325,7 @@ def normalize_releases(
     year: int,
     window_start: date,
     window_end: date,
+    cycle_start: date | None = None,
 ) -> list[dict[str, Any]]:
     normalized: list[dict[str, Any]] = []
     previous_start: date | None = None
@@ -276,12 +352,16 @@ def normalize_releases(
         duration_weeks = int(raw.get("duration", 1))
         if duration_weeks <= 0:
             raise ValueError(f"Release '{name}' must have duration > 0.")
+        extend_days = int(raw.get("extend_days", 0))
+        if extend_days < 0:
+            raise ValueError(f"Release '{name}' extend_days must be >= 0.")
+        shift_days = int(raw.get("shift_days", 0))
 
         kind = str(raw.get("kind", "by-week")).strip()
         start: date | None = None
         if kind == "by-week":
             if "week" in raw:
-                start = week_start_date(year, int(raw.get("week")))
+                start = resolve_week_start(int(raw.get("week")), year, cycle_start)
             elif "offset" in raw:
                 if previous_start is None:
                     raise ValueError(
@@ -304,6 +384,7 @@ def normalize_releases(
         if start is None:
             continue
 
+        start += timedelta(days=shift_days)
         previous_start = start
 
         purpose = str(raw.get("purpose", "")).strip()
@@ -344,6 +425,7 @@ def normalize_releases(
                 "set_key": set_key,
                 "set_child_index": set_child_index,
                 "start": start,
+                "end": event_end_date(start, duration_weeks) + timedelta(days=extend_days),
                 "duration_weeks": duration_weeks,
             }
         )
@@ -370,6 +452,7 @@ def normalize_deadlines(
     year: int,
     window_start: date,
     window_end: date,
+    cycle_start: date | None = None,
 ) -> list[dict[str, Any]]:
     normalized: list[dict[str, Any]] = []
     group_row_index: dict[str, int] = {}
@@ -383,7 +466,7 @@ def normalize_deadlines(
         if not release and not purpose:
             raise ValueError("Each deadlines entry must include release and/or purpose.")
 
-        start = resolve_event_start(raw, year)
+        start = resolve_event_start(raw, year, cycle_start)
         if start is None:
             continue
 
@@ -447,8 +530,10 @@ def build_plan(plan: dict[str, Any]) -> dict[str, Any]:
     if not cycle:
         raise ValueError("YAML must define a cycle, for example '26.10'.")
 
-    window = compute_window(cycle)
+    window = compute_window(cycle, plan)
     year = int(window["year"])
+    explicit = bool(window.get("explicit"))
+    cycle_start = window.get("cycle_start") if explicit else None
     window_start = window["window_start"]
     window_end = window["window_end"]
 
@@ -478,21 +563,31 @@ def build_plan(plan: dict[str, Any]) -> dict[str, Any]:
         year=year,
         window_start=window_start,
         window_end=window_end,
-        constrain_to_window=False,
+        constrain_to_window=explicit,
+        cycle_start=cycle_start,
     )
-    window = stretch_window_to_events(window, sprints)
-    window_start = window["window_start"]
-    window_end = window["window_end"]
+    if not explicit:
+        window = stretch_window_to_events(window, sprints)
+        window_start = window["window_start"]
+        window_end = window["window_end"]
 
     releases = normalize_releases(
         releases_raw,
         year=year,
         window_start=window_start,
         window_end=window_end,
+        cycle_start=cycle_start,
     )
-    window = stretch_window_to_events(window, releases)
-    window_start = window["window_start"]
-    window_end = window["window_end"]
+    if explicit:
+        releases = [
+            release
+            for release in releases
+            if release["start"] <= window_end and resolve_event_end(release) >= window_start
+        ]
+    else:
+        window = stretch_window_to_events(window, releases)
+        window_start = window["window_start"]
+        window_end = window["window_end"]
 
     release_sets = build_release_sets(releases)
     deadlines = normalize_deadlines(
@@ -500,18 +595,22 @@ def build_plan(plan: dict[str, Any]) -> dict[str, Any]:
         year=year,
         window_start=window_start,
         window_end=window_end,
+        cycle_start=cycle_start,
     )
 
-    # Sprints are already guaranteed to fit in the stretched window.
+    # An explicit window stays put. Otherwise holidays use the stretched bounds.
     holidays = normalize_named_events(
         holidays_raw,
         section="Holidays",
         year=year,
         window_start=window_start,
         window_end=window_end,
+        cycle_start=cycle_start,
     )
 
-    title = f"{plan.get('project', 'Project')} {cycle} Release Plan"
+    project_name = str(plan.get("project", "Project")).strip() or "Project"
+    titled_project = project_name[:1].upper() + project_name[1:]
+    title = f"{cycle} {titled_project} Release Plan"
 
     return {
         "title": title,
@@ -528,6 +627,33 @@ def build_plan(plan: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _determine_sprint_status(sprint: dict[str, Any] | None, reference_date: date) -> str:
+    """Return active, upcoming, completed, or none relative to reference_date."""
+    if not sprint:
+        return "none"
+
+    sprint_start = sprint["start"]
+    sprint_end = resolve_event_end(sprint)
+
+    if sprint_start <= reference_date <= sprint_end:
+        return "active"
+    if sprint_start > reference_date:
+        return "upcoming"
+    return "completed"
+
+
+def _select_sprint(
+    sprints: list[dict[str, Any]], reference_date: date
+) -> tuple[dict[str, Any] | None, str]:
+    """Pick the in-progress sprint, otherwise the next one that has not started."""
+    ordered = sorted(sprints, key=lambda sprint: (sprint["start"], str(sprint.get("name", ""))))
+    for sprint in ordered:
+        status = _determine_sprint_status(sprint, reference_date)
+        if status in {"active", "upcoming"}:
+            return sprint, status
+    return None, "none"
+
+
 def calculate_sidebar_metrics(
     built_plan: dict[str, Any], reference_date: date
 ) -> dict[str, Any]:
@@ -539,22 +665,36 @@ def calculate_sidebar_metrics(
     deadlines = built_plan["deadlines"]
     sprints = built_plan["sprints"]
     
-    # Calculate cycle window info
-    cycle_window_start = window_start
-    cycle_window_end = window_end
-    cycle_duration_weeks = window["base_weeks"]
-    cycle_duration_days = window["exact_days"]
+    # The sidebar shows the development cycle, not the padded chart.
+    if window.get("explicit"):
+        cycle_window_start = window["cycle_start"]
+        cycle_window_end = window["cycle_end"]
+        cycle_duration_weeks = int(window["cycle_weeks"])
+        cycle_duration_days = int(window["exact_days"])
+    else:
+        cycle_window_start = window_start
+        cycle_window_end = window_end
+        cycle_duration_weeks = window["base_weeks"]
+        cycle_duration_days = window["exact_days"]
     
-    # Find next major release (first release after reference_date)
+    # The major in progress today. Bugfix and security bars are not majors.
+    current_major_release = None
+    for release in releases:
+        if int(release.get("set_child_index", 0)) != 0:
+            continue
+        release_end = resolve_event_end(release)
+        if release["start"] <= reference_date <= release_end:
+            current_major_release = release
+            break
+
+    # The next major that has not started. Bugfix and security bars are minors.
     next_major_release = None
     for release in releases:
-        if release["start"] >= reference_date:
+        if int(release.get("set_child_index", 0)) != 0:
+            continue
+        if release["start"] > reference_date:
             next_major_release = release
             break
-    
-    if next_major_release is None and releases:
-        # If no future releases, show the last one
-        next_major_release = releases[-1]
     
     # Find upcoming deadline (closest deadline after reference_date)
     upcoming_deadline = None
@@ -563,27 +703,7 @@ def calculate_sidebar_metrics(
             upcoming_deadline = deadline
             break
     
-    # Find active sprint (sprint that contains reference_date or next one)
-    active_sprint = None
-    for sprint in sprints:
-        sprint_start = sprint["start"]
-        sprint_end = event_end_date(sprint_start, sprint["duration_weeks"])
-        if sprint_start <= reference_date <= sprint_end:
-            active_sprint = sprint
-            break
-    
-    if active_sprint is None and sprints:
-        # If no current sprint, show the next one
-        for sprint in sprints:
-            sprint_start = sprint["start"]
-            sprint_end = event_end_date(sprint_start, sprint["duration_weeks"])
-            if sprint_start >= reference_date:
-                active_sprint = sprint
-                break
-    
-    if active_sprint is None and sprints:
-        # If no future sprints, show the last one
-        active_sprint = sprints[-1]
+    active_sprint, sprint_status = _select_sprint(sprints, reference_date)
     
     # Format dates for display
     def format_date_range(start_date: date, end_date: date) -> str:
@@ -595,9 +715,34 @@ def calculate_sidebar_metrics(
     def format_date_simple(date_obj: date) -> str:
         return date_obj.strftime("%b %d, %Y")
     
-    # Helper to get end date from start and duration
-    def get_end_date(start_date: date, duration_weeks: int) -> date:
-        return event_end_date(start_date, duration_weeks)
+    def release_card(release: dict[str, Any] | None, countdown_to: str | None = None) -> dict[str, Any]:
+        if not release:
+            return {
+                "version": "None",
+                "purpose": "",
+                "start": "",
+                "end": "",
+                "date_range": "",
+                "days_until": None,
+            }
+        end = resolve_event_end(release)
+        color, color_end = release_pack_gradient(releases, release)
+        if countdown_to == "end":
+            days_until = (end - reference_date).days
+        elif countdown_to == "start":
+            days_until = (release["start"] - reference_date).days
+        else:
+            days_until = None
+        return {
+            "version": release["name"],
+            "purpose": str(release.get("purpose", "")).strip(),
+            "start": format_date_simple(release["start"]),
+            "end": format_date_simple(end),
+            "date_range": format_date_range(release["start"], end),
+            "color": color,
+            "color_end": color_end,
+            "days_until": days_until,
+        }
     
     metrics = {
         "cycle_window": {
@@ -607,20 +752,8 @@ def calculate_sidebar_metrics(
             "duration_days": cycle_duration_days,
             "text": f"{format_date_simple(cycle_window_start)} – {format_date_simple(cycle_window_end)}",
         },
-        "next_major_release": {
-            "version": next_major_release["name"] if next_major_release else "None",
-            "purpose": next_major_release.get("purpose", "") if next_major_release else "",
-            "start": format_date_simple(next_major_release["start"]) if next_major_release else "",
-            "end": format_date_simple(get_end_date(next_major_release["start"], next_major_release["duration_weeks"])) if next_major_release else "",
-            "date_range": (
-                format_date_range(
-                    next_major_release["start"],
-                    get_end_date(next_major_release["start"], next_major_release["duration_weeks"])
-                )
-                if next_major_release
-                else ""
-            ),
-        },
+        "current_major_release": release_card(current_major_release, "end"),
+        "next_major_release": release_card(next_major_release, "start"),
         "upcoming_deadline": {
             "name": upcoming_deadline["label"] if upcoming_deadline else "None",
             "date": format_date_simple(upcoming_deadline["start"]) if upcoming_deadline else "",
@@ -633,11 +766,20 @@ def calculate_sidebar_metrics(
         "active_sprint": {
             "name": active_sprint["label"] if active_sprint else "None",
             "start": format_date_simple(active_sprint["start"]) if active_sprint else "",
-            "end": format_date_simple(get_end_date(active_sprint["start"], active_sprint["duration_weeks"])) if active_sprint else "",
+            "end": format_date_simple(resolve_event_end(active_sprint)) if active_sprint else "",
             "date_range": (
-                format_date_range(active_sprint["start"], get_end_date(active_sprint["start"], active_sprint["duration_weeks"]))
+                format_date_range(active_sprint["start"], resolve_event_end(active_sprint))
                 if active_sprint
                 else ""
+            ),
+            "status": sprint_status,
+            "is_active": sprint_status == "active",
+            "is_upcoming": sprint_status == "upcoming",
+            "is_completed": sprint_status == "completed",
+            "days_until": (
+                (active_sprint["start"] - reference_date).days
+                if sprint_status == "upcoming" and active_sprint
+                else None
             ),
         },
     }
@@ -661,11 +803,11 @@ def calculate_zoom_levels(
     
     for release in releases:
         all_starts.append(release["start"])
-        all_ends.append(event_end_date(release["start"], release["duration_weeks"]))
+        all_ends.append(resolve_event_end(release))
     
     for sprint in sprints:
         sprint_start = sprint["start"]
-        sprint_end = event_end_date(sprint_start, sprint["duration_weeks"])
+        sprint_end = resolve_event_end(sprint)
         all_starts.append(sprint_start)
         all_ends.append(sprint_end)
     
@@ -706,6 +848,32 @@ def calculate_zoom_levels(
 
 def event_end_date(start: date, duration_weeks: int) -> date:
     return start + timedelta(days=duration_weeks * 7 - 1)
+
+
+def resolve_event_end(event: dict[str, Any]) -> date:
+    stored = event.get("end")
+    if isinstance(stored, date):
+        return stored
+    return event_end_date(event["start"], int(event["duration_weeks"]))
+
+
+def event_bar_geometry(
+    event_start: date,
+    event_end: date,
+    window_start: date,
+    window_end: date,
+    grid_x: float,
+    week_width: float,
+) -> tuple[float, float] | None:
+    """Place a bar by calendar day. Whole weeks stay on the week grid."""
+    clipped = clip_event_to_window(event_start, event_end, window_start, window_end)
+    if clipped is None:
+        return None
+    clipped_start, clipped_end = clipped
+    day_width = week_width / 7
+    offset_days = (clipped_start - window_start).days
+    span_days = (clipped_end - clipped_start).days + 1
+    return grid_x + offset_days * day_width, span_days * day_width
 
 
 def clip_event_to_window(
@@ -753,6 +921,14 @@ def interpolate_color(start_hex: str, end_hex: str, t: float) -> str:
     return rgb_to_hex(out)
 
 
+def release_pack_gradient(releases: list[dict[str, Any]], release: dict[str, Any]) -> tuple[str, str]:
+    """Match a major release card to the same hue as its chart bar."""
+    pack_keys = list(dict.fromkeys(item["set_key"] for item in releases))
+    pack_index = pack_keys.index(release["set_key"]) % len(RELEASE_PACK_PALETTE)
+    base_fill, _stroke = RELEASE_PACK_PALETTE[pack_index]
+    return base_fill, interpolate_color(base_fill, "#ffffff", 0.22)
+
+
 def build_render_model(built_plan: dict[str, Any]) -> dict[str, Any]:
     window = built_plan["window"]
     window_start: date = window["window_start"]
@@ -783,13 +959,23 @@ def build_render_model(built_plan: dict[str, Any]) -> dict[str, Any]:
     grid_x = layout["left_label_width"] + layout["grid_left_gap"]
     grid_width = weeks_count * layout["week_width"]
 
-    pulse_anchor = first_monday_of_year(int(window["year"]))
+    explicit = bool(window.get("explicit"))
+    cycle_start: date | None = window.get("cycle_start") if explicit else None
+    cycle_weeks = int(window.get("cycle_weeks") or 0)
 
     weeks: list[dict[str, Any]] = []
     for index in range(weeks_count):
         week_start = window_start + timedelta(days=index * 7)
         week_end = week_start + timedelta(days=6)
+        # Pulses restart each calendar year, paired from that year's first Monday.
+        pulse_anchor = first_monday_of_year(week_start.year)
         business_week = ((week_start - pulse_anchor).days // 7) + 1
+        if explicit and cycle_start is not None:
+            cycle_week = ((week_start - cycle_start).days // 7) + 1
+            week_label = str(cycle_week) if 1 <= cycle_week <= cycle_weeks else ""
+        else:
+            cycle_week = None
+            week_label = f"W{business_week}"
         weeks.append(
             {
                 "index": index,
@@ -797,7 +983,8 @@ def build_render_model(built_plan: dict[str, Any]) -> dict[str, Any]:
                 "end": week_end,
                 "start_label": week_start.strftime("%Y-%m-%d"),
                 "business_week": int(business_week),
-                "week_label": f"W{business_week}",
+                "cycle_week": cycle_week,
+                "week_label": week_label,
                 "range_label": (
                     f"{week_start.strftime('%d-%m')} to {week_end.strftime('%d-%m')}"
                 ),
@@ -918,19 +1105,19 @@ def build_render_model(built_plan: dict[str, Any]) -> dict[str, Any]:
 
         for event in lane["events"]:
             event_start = event["start"]
-            duration_weeks = int(event["duration_weeks"])
-            event_end = event_end_date(event_start, duration_weeks)
+            event_end = resolve_event_end(event)
 
-            clipped = clip_event_to_window(event_start, event_end, window_start, window_end)
-            if clipped is None:
+            geometry = event_bar_geometry(
+                event_start,
+                event_end,
+                window_start,
+                window_end,
+                grid_x,
+                layout["week_width"],
+            )
+            if geometry is None:
                 continue
-
-            clipped_start, clipped_end = clipped
-            start_index = (clipped_start - window_start).days // 7
-            end_index = (clipped_end - window_start).days // 7
-            span_weeks = end_index - start_index + 1
-
-            width = span_weeks * layout["week_width"]
+            _x, width = geometry
             max_chars = max(
                 3,
                 (width - 2 * layout["item_horizontal_padding"]) // layout["char_px"],
@@ -964,8 +1151,7 @@ def build_render_model(built_plan: dict[str, Any]) -> dict[str, Any]:
 
         for event in lane["events"]:
             event_start = event["start"]
-            duration_weeks = int(event["duration_weeks"])
-            event_end = event_end_date(event_start, duration_weeks)
+            event_end = resolve_event_end(event)
 
             clipped = clip_event_to_window(event_start, event_end, window_start, window_end)
             if clipped is None:
@@ -973,11 +1159,23 @@ def build_render_model(built_plan: dict[str, Any]) -> dict[str, Any]:
 
             clipped_start, clipped_end = clipped
             start_index = (clipped_start - window_start).days // 7
-            end_index = (clipped_end - window_start).days // 7
-            span_weeks = end_index - start_index + 1
-
-            x = grid_x + start_index * layout["week_width"]
-            width = span_weeks * layout["week_width"]
+            if lane["class_name"] == "deadline":
+                end_index = (clipped_end - window_start).days // 7
+                span_weeks = end_index - start_index + 1
+                x = grid_x + start_index * layout["week_width"]
+                width = span_weeks * layout["week_width"]
+            else:
+                geometry = event_bar_geometry(
+                    event_start,
+                    event_end,
+                    window_start,
+                    window_end,
+                    grid_x,
+                    layout["week_width"],
+                )
+                if geometry is None:
+                    continue
+                x, width = geometry
             label = str(event["label"])
             deadline_center_x: float | None = None
 
@@ -1095,6 +1293,7 @@ def build_render_model(built_plan: dict[str, Any]) -> dict[str, Any]:
 
         items: list[dict[str, Any]] = []
         release_rows = max((item["set_child_index"] for item in pre_items), default=0) + 1
+        release_pack_keys = list(dict.fromkeys(item["set_key"] for item in pre_items))
         for item_index, pre_item in enumerate(pre_items):
             if lane["class_name"] == "release":
                 row_index = pre_item["set_child_index"]
@@ -1118,9 +1317,11 @@ def build_render_model(built_plan: dict[str, Any]) -> dict[str, Any]:
             fill_color: str | None = None
             stroke_color: str | None = None
             if lane["class_name"] == "release":
-                shade_t = 0.0 if release_rows <= 1 else row_index / (release_rows - 1)
-                fill_color = interpolate_color("#5b21b6", "#8b5cf6", shade_t)
-                stroke_color = interpolate_color("#4c1d95", "#6d28d9", shade_t)
+                pack_index = release_pack_keys.index(pre_item["set_key"]) % len(RELEASE_PACK_PALETTE)
+                base_fill, base_stroke = RELEASE_PACK_PALETTE[pack_index]
+                shade_t = min(pre_item["set_child_index"], 2) * 0.16
+                fill_color = interpolate_color(base_fill, "#ffffff", shade_t)
+                stroke_color = interpolate_color(base_stroke, "#ffffff", shade_t)
             elif lane["class_name"] == "deadline":
                 palette_idx = pre_item["deadline_group_index"] % len(deadline_group_palette)
                 fill_color, stroke_color = deadline_group_palette[palette_idx]
@@ -1147,7 +1348,9 @@ def build_render_model(built_plan: dict[str, Any]) -> dict[str, Any]:
                     line_class = "item-label-inside item-label-centered"
                 elif lane["class_name"] == "deadline":
                     line_x = float(pre_item["marker_center_x"])
-                    line_class = "item-label-inside item-label-centered deadline-label"
+                    date_line = bool(re.fullmatch(r"\d{2}-\d{2}-\d{4}", line_text))
+                    label_class = "deadline-label-date" if date_line else "deadline-label"
+                    line_class = f"item-label-inside item-label-centered {label_class}"
                 else:
                     line_x = pre_item["x"] + layout["item_horizontal_padding"]
                     line_class = "item-label-inside"
@@ -1325,7 +1528,8 @@ def main() -> None:
         "sidebar_metrics": sidebar_metrics,
         "zoom_levels": zoom_levels,
         "reference_date": reference_date.isoformat(),
-        "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "generated_at": datetime.now().strftime("%Y-%m-%d"),
+        "plan_source": plan,
     }
     html = render_html(template_file, context)
 

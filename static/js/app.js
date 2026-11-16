@@ -20,7 +20,7 @@ const AppState = {
     },
     isFullscreen: false,
     planData: null,
-    isPanEnabled: true,
+    isPanEnabled: false,
     hoveredElement: null
 };
 
@@ -71,7 +71,6 @@ document.addEventListener('DOMContentLoaded', function() {
     initFullscreen();
     initSidebarToggle();
     initExport();
-    setupKeyboardShortcuts();
     
     // Quick inline script to hide loading overlay
     window.addEventListener('load', function() {
@@ -188,7 +187,6 @@ function initExport() {
 }
 
 function showExportMenu() {
-    // Create export menu
     const menu = document.createElement('div');
     menu.className = 'export-menu';
     menu.innerHTML = `
@@ -205,13 +203,12 @@ function showExportMenu() {
                     <span>Export as PDF</span>
                 </button>
                 <button class="export-option" data-format="json">
-                    <span>Export Data (JSON)</span>
+                    <span>Export configuration (JSON)</span>
                 </button>
             </div>
         </div>
     `;
-    
-    // Style the menu
+
     menu.style.cssText = `
         position: absolute;
         background: white;
@@ -221,34 +218,40 @@ function showExportMenu() {
         min-width: 200px;
         z-index: 1000;
     `;
-    
+
     const content = menu.querySelector('.menu-content');
     content.style.cssText = `
         padding: var(--spacing-md);
     `;
-    
-    // Position the menu near the export button
+
     const exportBtn = document.getElementById('exportBtn');
     const rect = exportBtn.getBoundingClientRect();
     menu.style.top = rect.bottom + 'px';
     menu.style.right = (window.innerWidth - rect.right) + 'px';
-    
+
     document.body.appendChild(menu);
-    
-    // Setup event listeners for export options
+
+    const removeMenu = () => {
+        if (menu.parentNode) {
+            menu.parentNode.removeChild(menu);
+        }
+    };
+
     menu.querySelectorAll('.export-option').forEach(option => {
-        option.addEventListener('click', function() {
+        option.addEventListener('click', function(event) {
+            event.stopPropagation();
             const format = this.dataset.format;
-            exportTimeline(format);
-            document.body.removeChild(menu);
+            removeMenu();
+            Promise.resolve(exportTimeline(format)).catch(function(error) {
+                alert(error && error.message ? error.message : 'Export failed.');
+            });
         });
     });
-    
-    // Close menu when clicking outside
+
     setTimeout(() => {
-        const closeMenu = (e) => {
-            if (!menu.contains(e.target) && e.target !== exportBtn) {
-                document.body.removeChild(menu);
+        const closeMenu = (event) => {
+            if (!menu.contains(event.target) && event.target !== exportBtn) {
+                removeMenu();
                 document.removeEventListener('click', closeMenu);
             }
         };
@@ -259,113 +262,188 @@ function showExportMenu() {
 function exportTimeline(format) {
     switch (format) {
         case 'svg':
-            exportAsSVG();
-            break;
+            return exportAsSVG();
         case 'png':
-            exportAsPNG();
-            break;
+            return exportAsPNG();
         case 'pdf':
-            exportAsPDF();
-            break;
+            return exportAsPDF();
         case 'json':
-            exportAsJSON();
-            break;
+            return exportAsJSON();
+        default:
+            throw new Error('Unknown export format.');
     }
+}
+
+function exportBaseName() {
+    const source = planSource();
+    const project = String(source.project || 'release').trim() || 'release';
+    const cycle = String(source.cycle || '').trim();
+    return cycle ? `${project}-${cycle}-release-plan` : `${project}-release-plan`;
+}
+
+function planSource() {
+    const element = document.getElementById('plan-source');
+    if (!element) {
+        throw new Error('Plan configuration is missing.');
+    }
+    return JSON.parse(element.textContent);
+}
+
+function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(function() {
+        URL.revokeObjectURL(url);
+    }, 0);
+}
+
+function timelineSvgMarkup() {
+    const svg = document.getElementById('timelineSvg');
+    if (!svg) {
+        throw new Error('Timeline is missing.');
+    }
+    const clone = svg.cloneNode(true);
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    return {
+        markup: new XMLSerializer().serializeToString(clone),
+        width: Number(svg.getAttribute('width')),
+        height: Number(svg.getAttribute('height')),
+    };
 }
 
 function exportAsSVG() {
-    alert('SVG export would be implemented here\nCurrent SVG is already available at output/plan.svg');
+    const timeline = timelineSvgMarkup();
+    const blob = new Blob([timeline.markup], { type: 'image/svg+xml' });
+    downloadBlob(blob, `${exportBaseName()}.svg`);
+}
+
+function rasterizeTimeline(scale) {
+    const timeline = timelineSvgMarkup();
+    const url = URL.createObjectURL(new Blob([timeline.markup], { type: 'image/svg+xml;charset=utf-8' }));
+    return new Promise(function(resolve, reject) {
+        const image = new Image();
+        image.onload = function() {
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.round(timeline.width * scale);
+            canvas.height = Math.round(timeline.height * scale);
+            const context = canvas.getContext('2d');
+            context.fillStyle = '#ffffff';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            context.drawImage(image, 0, 0, canvas.width, canvas.height);
+            URL.revokeObjectURL(url);
+            resolve({ canvas: canvas, width: timeline.width, height: timeline.height });
+        };
+        image.onerror = function() {
+            URL.revokeObjectURL(url);
+            reject(new Error('Could not draw the timeline.'));
+        };
+        image.src = url;
+    });
 }
 
 function exportAsPNG() {
-    alert('PNG export would require html2canvas or similar library');
+    return rasterizeTimeline(2).then(function(raster) {
+        return new Promise(function(resolve, reject) {
+            raster.canvas.toBlob(function(blob) {
+                if (!blob) {
+                    reject(new Error('Could not create the PNG.'));
+                    return;
+                }
+                downloadBlob(blob, `${exportBaseName()}.png`);
+                resolve();
+            }, 'image/png');
+        });
+    });
 }
 
 function exportAsPDF() {
-    alert('PDF export would require jsPDF or similar library');
+    return rasterizeTimeline(2).then(function(raster) {
+        return new Promise(function(resolve, reject) {
+            raster.canvas.toBlob(function(blob) {
+                if (!blob) {
+                    reject(new Error('Could not create the PDF image.'));
+                    return;
+                }
+                blob.arrayBuffer().then(function(buffer) {
+                    const pdf = buildPdf(
+                        new Uint8Array(buffer),
+                        raster.canvas.width,
+                        raster.canvas.height,
+                        raster.width,
+                        raster.height
+                    );
+                    downloadBlob(new Blob([pdf], { type: 'application/pdf' }), `${exportBaseName()}.pdf`);
+                    resolve();
+                }).catch(reject);
+            }, 'image/jpeg', 0.92);
+        });
+    });
 }
 
 function exportAsJSON() {
-    const dataStr = JSON.stringify(AppState.planData, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    
-    const exportFileDefaultName = `release-plan-${new Date().toISOString().split('T')[0]}.json`;
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
+    const blob = new Blob(
+        [JSON.stringify(planSource(), null, 2) + '\n'],
+        { type: 'application/json' }
+    );
+    downloadBlob(blob, `${exportBaseName()}.json`);
 }
 
-// Setup keyboard shortcuts
-function setupKeyboardShortcuts() {
-    document.addEventListener('keydown', function(e) {
-        // Zoom shortcuts
-        if (e.ctrlKey || e.metaKey) {
-            switch (e.key) {
-                case '=':
-                case '+':
-                    e.preventDefault();
-                    if (window.ReleasePlanner.zoom && window.ReleasePlanner.zoom.zoomIn) {
-                        window.ReleasePlanner.zoom.zoomIn();
-                    }
-                    break;
-                case '-':
-                    e.preventDefault();
-                    if (window.ReleasePlanner.zoom && window.ReleasePlanner.zoom.zoomOut) {
-                        window.ReleasePlanner.zoom.zoomOut();
-                    }
-                    break;
-                case '0':
-                    e.preventDefault();
-                    if (window.ReleasePlanner.zoom && window.ReleasePlanner.zoom.setZoomLevel) {
-                        window.ReleasePlanner.zoom.setZoomLevel('fit');
-                    }
-                    break;
-            }
-        }
-        
-        // Pan with arrow keys
-        if (e.key.startsWith('Arrow')) {
-            const wrapper = document.querySelector('.timeline-wrapper');
-            if (!wrapper) return;
-            
-            const scrollAmount = 50;
-            switch (e.key) {
-                case 'ArrowLeft':
-                    wrapper.scrollLeft -= scrollAmount;
-                    break;
-                case 'ArrowRight':
-                    wrapper.scrollLeft += scrollAmount;
-                    break;
-                case 'ArrowUp':
-                    wrapper.scrollTop -= scrollAmount;
-                    break;
-                case 'ArrowDown':
-                    wrapper.scrollTop += scrollAmount;
-                    break;
-            }
-        }
+function concatBytes(parts) {
+    const size = parts.reduce(function(total, part) {
+        return total + part.length;
+    }, 0);
+    const out = new Uint8Array(size);
+    let position = 0;
+    parts.forEach(function(part) {
+        out.set(part, position);
+        position += part.length;
     });
-    
-    // Wheel zoom
-    const timelineWrapper = document.querySelector('.timeline-wrapper');
-    if (timelineWrapper) {
-        timelineWrapper.addEventListener('wheel', function(e) {
-            if (e.ctrlKey || e.metaKey) {
-                e.preventDefault();
-                if (e.deltaY < 0) {
-                    if (window.ReleasePlanner.zoom && window.ReleasePlanner.zoom.zoomIn) {
-                        window.ReleasePlanner.zoom.zoomIn();
-                    }
-                } else {
-                    if (window.ReleasePlanner.zoom && window.ReleasePlanner.zoom.zoomOut) {
-                        window.ReleasePlanner.zoom.zoomOut();
-                    }
-                }
-            }
-        });
+    return out;
+}
+
+function buildPdf(jpegBytes, imageWidth, imageHeight, pageWidth, pageHeight) {
+    const encoder = new TextEncoder();
+    const content = encoder.encode(`q\n${pageWidth} 0 0 ${pageHeight} 0 0 cm\n/Im1 Do\nQ\n`);
+    const objects = [
+        encoder.encode('<< /Type /Catalog /Pages 2 0 R >>'),
+        encoder.encode('<< /Type /Pages /Kids [3 0 R] /Count 1 >>'),
+        encoder.encode(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Contents 4 0 R /Resources << /XObject << /Im1 5 0 R >> >> >>`),
+        concatBytes([
+            encoder.encode(`<< /Length ${content.length} >>\nstream\n`),
+            content,
+            encoder.encode('\nendstream'),
+        ]),
+        concatBytes([
+            encoder.encode(`<< /Type /XObject /Subtype /Image /Width ${imageWidth} /Height ${imageHeight} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpegBytes.length} >>\nstream\n`),
+            jpegBytes,
+            encoder.encode('\nendstream'),
+        ]),
+    ];
+
+    const chunks = [encoder.encode('%PDF-1.4\n')];
+    let offset = chunks[0].length;
+    const xref = [0];
+    objects.forEach(function(body, index) {
+        const number = index + 1;
+        const head = encoder.encode(`${number} 0 obj\n`);
+        const tail = encoder.encode('\nendobj\n');
+        xref[number] = offset;
+        chunks.push(head, body, tail);
+        offset += head.length + body.length + tail.length;
+    });
+
+    let xrefTable = `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+    for (let number = 1; number <= objects.length; number += 1) {
+        xrefTable += `${String(xref[number]).padStart(10, '0')} 00000 n \n`;
     }
+    xrefTable += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${offset}\n%%EOF\n`;
+    chunks.push(encoder.encode(xrefTable));
+    return concatBytes(chunks);
 }
 
 // Utility functions

@@ -1,0 +1,144 @@
+project: snapd
+owner: "Ernest Lotter"
+cycle: "27.04"
+
+# Week 1 is 19 Oct 2026. Week 27 contains 23 Apr 2027.
+# The chart starts at Pulse 21 and runs through the 2.83 pack.
+window:
+  start: "2026-10-19"
+  end: "2027-04-23"
+  pad_before_weeks: 1
+  pad_after_weeks: 5
+
+timeline:
+  resolution: week
+
+# Bounds are calendar business weeks. Pulses pair those weeks inside each year.
+pulses:
+  start:
+    kind: "by-week"
+    week: 1
+  end:
+    kind: "by-week"
+    week: 52
+
+releases:
+  - name: "2.79"
+    purpose: "26.10 carry-over content"
+    kind: "by-week"
+    week: 4
+    duration: 4
+  - name: "2.79.1"
+    purpose: "bugfix"
+    kind: "by-week"
+    offset: 1
+    duration: 3
+  - name: "2.79.2"
+    purpose: "security"
+    kind: "by-week"
+    offset: 1
+    duration: 3
+
+  - name: "2.80"
+    kind: "by-week"
+    week: 12
+    duration: 4
+    links_to: "26.04.2: point release"
+  - name: "2.80.1"
+    purpose: "bugfix"
+    kind: "by-week"
+    offset: 1
+    duration: 3
+  - name: "2.80.2"
+    purpose: "security"
+    kind: "by-week"
+    offset: 1
+    duration: 3
+
+  - name: "2.81"
+    purpose: "27.04 installer content"
+    kind: "by-week"
+    offset: 3
+    duration: 4
+    links_to: "27.04: beta freeze"
+  - name: "2.81.1"
+    purpose: "bugfix"
+    kind: "by-week"
+    offset: 1
+    duration: 3
+  - name: "2.81.2"
+    purpose: "security"
+    kind: "by-week"
+    offset: 1
+    duration: 3
+
+  - name: "2.82"
+    purpose: "27.04 update content"
+    kind: "by-week"
+    offset: 3
+    duration: 4
+  - name: "2.82.1"
+    purpose: "bugfix"
+    kind: "by-week"
+    offset: 1
+    duration: 3
+  - name: "2.82.2"
+    purpose: "security"
+    kind: "by-week"
+    offset: 1
+    duration: 3
+
+  - name: "2.83"
+    kind: "by-week"
+    offset: 3
+    duration: 4
+  - name: "2.83.1"
+    purpose: "bugfix"
+    kind: "by-week"
+    offset: 1
+    duration: 3
+  - name: "2.83.2"
+    purpose: "security"
+    kind: "by-week"
+    offset: 1
+    duration: 3
+
+series:
+  "26.04": "Resolute"
+  "27.04": "Tenacious"
+
+deadlines:
+  - release: "26.04.2"
+    purpose: "point release"
+    kind: "by-date"
+    date: "18-02-2027"
+  - release: "27.04"
+    purpose: "feature freeze"
+    kind: "by-date"
+    date: "25-02-2027"
+  - release: "27.04"
+    purpose: "beta freeze"
+    kind: "by-date"
+    date: "29-03-2027"
+  - release: "27.04"
+    purpose: "final release"
+    kind: "by-date"
+    date: "22-04-2027"
+
+sprints:
+  - name: "Mexico"
+    kind: "by-date"
+    date: "26-10-2026"
+    duration: 2
+  - name: "Bangkok"
+    kind: "by-date"
+    date: "03-05-2027"
+    end: "14-05-2027"
+
+holidays:
+  - name: "End-of-year"
+    kind: "by-week"
+    week: 9
+    duration: 3
+  - name: "Chinese new year"
+    kind: "by-lookup"

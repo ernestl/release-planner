@@ -27,7 +27,7 @@ python generate.py [OPTIONS]
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `--input` | `data/snapd-2026-h1.yaml` | Path to the release-plan YAML file |
+| `--input` | `data/snapd-27.04.yaml` | Path to the release-plan YAML file |
 | `--template` | `templates/plan.html.j2` | Jinja2 HTML template |
 | `--output` | `output/plan.html` | Generated HTML output path |
 | `--svg-template` | `templates/plan.svg.j2` | Jinja2 SVG template |

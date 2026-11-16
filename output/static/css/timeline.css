@@ -155,9 +155,10 @@
 
 /* Week Dividers */
 .week-divider {
-    stroke: var(--color-border);
-    stroke-width: 1;
-    opacity: 0.5;
+    stroke: #c5d0dc;
+    stroke-width: 1.25;
+    stroke-dasharray: 1.5 4;
+    stroke-linecap: round;
 }
 
 /* Lane Bands */
@@ -285,6 +286,18 @@
     font-family: var(--font-family);
 }
 
+.item-label-inside.deadline-label {
+    fill: #7f1d1d;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.item-label-inside.deadline-label-date {
+    fill: #9f1239;
+    font-size: 10px;
+    font-weight: 600;
+}
+
 .item-label-centered {
     text-anchor: middle;
 }
@@ -352,75 +365,6 @@
 .tooltip-description {
     font-size: var(--font-size-sm);
     line-height: 1.4;
-}
-
-/* Legend Container */
-.legend-container {
-    background: var(--color-surface);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--color-border);
-    padding: var(--spacing-md);
-    margin-top: var(--spacing-lg);
-}
-
-.legend-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing-lg);
-}
-
-.legend-category {
-    flex: 1;
-    min-width: 150px;
-}
-
-.legend-category h3 {
-    font-size: var(--font-size-sm);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--color-text-muted);
-    margin-bottom: var(--spacing-sm);
-}
-
-.legend-items {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-}
-
-.legend-item {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    font-size: var(--font-size-sm);
-}
-
-.legend-color {
-    width: 12px;
-    height: 12px;
-    border-radius: var(--radius-sm);
-    flex-shrink: 0;
-}
-
-.legend-color.release {
-    background: var(--color-primary);
-}
-
-.legend-color.deadline {
-    background: var(--color-deadline);
-}
-
-.legend-color.holiday {
-    background: var(--color-holiday);
-}
-
-.legend-color.sprint {
-    background: var(--color-sprint);
-}
-
-.legend-color.pulse {
-    background: var(--color-pulse);
 }
 
 /* Timeline Controls Panel */
@@ -606,11 +550,6 @@
         padding: var(--spacing-md);
     }
     
-    .legend-grid {
-        flex-direction: column;
-        gap: var(--spacing-md);
-    }
-    
     .filter-controls {
         flex-direction: column;
         gap: var(--spacing-md);
@@ -620,8 +559,7 @@
 /* Print Styles */
 @media print {
     .timeline-controls,
-    .timeline-panel,
-    .legend-container {
+    .timeline-panel {
         display: none !important;
     }
     

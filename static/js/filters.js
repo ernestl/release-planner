@@ -42,7 +42,6 @@
         const filterBtn = document.getElementById('filterBtn');
         
         if (!filterBtn) {
-            console.warn('Filter button not found');
             return;
         }
         
@@ -162,7 +161,6 @@
         const filterBtn = document.getElementById('filterBtn');
         
         if (!filterBtn) {
-            console.warn('Filter button not found');
             return;
         }
         

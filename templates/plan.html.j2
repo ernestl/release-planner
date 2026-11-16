@@ -58,20 +58,15 @@
             <!-- Page header -->
             <div class="page-header">
                 <div class="page-title">
-                    <h1>{{ plan_name }} <span class="badge">{{ project }}</span></h1>
+                    <h1>{{ plan_name }}</h1>
                     <div class="page-meta">
                         <span>Owner: {{ owner }}</span>
                         <span style="margin: 0 0.5rem;">•</span>
-                        <span>Generated: {{ generated_at }}</span>
-                        <span style="margin: 0 0.5rem;">•</span>
-                        <span>Reference date: {{ reference_date }}</span>
+                        <span>Updated: {{ generated_at }}</span>
                     </div>
                 </div>
                 <div class="page-controls">
                     <div class="control-group">
-                        <button class="btn btn-outline filter-btn" id="filterBtn">
-                            <span>Filter</span>
-                        </button>
                         <button class="btn btn-outline export-btn" id="exportBtn">
                             <span>Export</span>
                         </button>
@@ -84,25 +79,6 @@
             
             <!-- Timeline container -->
             <div class="timeline-container">
-                <!-- Timeline controls -->
-                <div class="timeline-controls">
-                    <div class="zoom-controls">
-                        <span style="font-size: var(--font-size-sm); font-weight: 500; color: var(--color-text-muted); margin-right: var(--spacing-sm);">Zoom:</span>
-                        {% for zoom_key, zoom_data in zoom_levels.items() %}
-                        <button class="zoom-btn {% if zoom_key == '6m' %}active{% endif %}" data-zoom="{{ zoom_key }}">
-                            {{ zoom_data.label }}
-                        </button>
-                        {% endfor %}
-                    </div>
-                    <div class="control-group">
-                        <label for="panToggle">Pan:</label>
-                        <div class="toggle-switch">
-                            <input type="checkbox" id="panToggle" checked>
-                            <label for="panToggle"></label>
-                        </div>
-                    </div>
-                </div>
-                
                 <!-- Timeline wrapper -->
                 <div class="timeline-wrapper">
                     <!-- SVG timeline rendered by backend -->
@@ -112,9 +88,6 @@
                     <div class="tooltip" id="timelineTooltip"></div>
                 </div>
             </div>
-            
-            <!-- Legend -->
-            {% include 'components/legend.j2' %}
         </main>
     </div>
     
@@ -137,6 +110,7 @@
             },
             "sidebarMetrics": {
                 "cycleWindow": {{ sidebar_metrics.cycle_window|tojson }},
+                "currentMajorRelease": {{ sidebar_metrics.current_major_release|tojson }},
                 "nextMajorRelease": {{ sidebar_metrics.next_major_release|tojson }},
                 "upcomingDeadline": {{ sidebar_metrics.upcoming_deadline|tojson }},
                 "activeSprint": {{ sidebar_metrics.active_sprint|tojson }}
@@ -152,11 +126,11 @@
             }
         }
     </script>
+    <script id="plan-source" type="application/json">{{ plan_source|tojson }}</script>
     
     <!-- JavaScript Files -->
     <script src="static/js/app.js"></script>
     <script src="static/js/timeline.js"></script>
-    <script src="static/js/zoom.js"></script>
     <script src="static/js/filters.js"></script>
     
     <script>

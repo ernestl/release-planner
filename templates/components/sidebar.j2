@@ -1,9 +1,9 @@
-{# sidebar.j2 - Left sidebar with metrics and legend #}
+{# sidebar.j2 - Left sidebar with cycle metrics #}
 <aside class="sidebar">
     <div class="sidebar-section">
         <h3 class="sidebar-heading">
             <span class="icon">📅</span>
-            Cycle Window
+            {{ window.cycle }} Cycle Window
         </h3>
         <div class="date-range">
             <strong>{{ sidebar_metrics.cycle_window.text }}</strong>
@@ -11,11 +11,36 @@
         </div>
     </div>
     
-    {# Next Major Release Card #}
-    <div class="sidebar-card card-primary">
+    {# Current Major Release Card: the major whose window contains today. #}
+    {% if sidebar_metrics.current_major_release.version != "None" %}
+    <div class="sidebar-card" style="background: linear-gradient(135deg, {{ sidebar_metrics.current_major_release.color }} 0%, {{ sidebar_metrics.current_major_release.color_end }} 100%); border-color: {{ sidebar_metrics.current_major_release.color }}; color: white;">
+        <div class="card-icon">📦</div>
+        <div class="card-content">
+            <h4>CURRENT MAJOR RELEASE</h4>
+            <p class="version">{{ sidebar_metrics.current_major_release.version }}</p>
+            <p class="date-range">{{ sidebar_metrics.current_major_release.date_range }}</p>
+            {% if sidebar_metrics.current_major_release.purpose %}
+                <p class="text-muted" style="font-size: var(--font-size-xs); margin-top: var(--spacing-xs);">
+                    {{ sidebar_metrics.current_major_release.purpose }}
+                </p>
+            {% endif %}
+            <div class="status-badge active">Active</div>
+            {% if sidebar_metrics.current_major_release.days_until is not none %}
+            <div class="countdown">
+                <div class="countdown-number">{{ sidebar_metrics.current_major_release.days_until }}</div>
+                <div class="countdown-label">{{ 'day' if sidebar_metrics.current_major_release.days_until == 1 else 'days' }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {# Upcoming major: the next x.y release, not a bugfix or security update. #}
+    {% if sidebar_metrics.next_major_release.version != "None" %}
+    <div class="sidebar-card" style="background: linear-gradient(135deg, {{ sidebar_metrics.next_major_release.color }} 0%, {{ sidebar_metrics.next_major_release.color_end }} 100%); border-color: {{ sidebar_metrics.next_major_release.color }}; color: white;">
         <div class="card-icon">🚀</div>
         <div class="card-content">
-            <h4>NEXT MAJOR RELEASE</h4>
+            <h4>UPCOMING MAJOR RELEASE</h4>
             <p class="version">{{ sidebar_metrics.next_major_release.version }}</p>
             <p class="date-range">{{ sidebar_metrics.next_major_release.date_range }}</p>
             {% if sidebar_metrics.next_major_release.purpose %}
@@ -23,8 +48,15 @@
                     {{ sidebar_metrics.next_major_release.purpose }}
                 </p>
             {% endif %}
+            {% if sidebar_metrics.next_major_release.days_until is not none %}
+            <div class="countdown">
+                <div class="countdown-number">{{ sidebar_metrics.next_major_release.days_until }}</div>
+                <div class="countdown-label">{{ 'day' if sidebar_metrics.next_major_release.days_until == 1 else 'days' }}</div>
+            </div>
+            {% endif %}
         </div>
     </div>
+    {% endif %}
     
     {# Upcoming Deadline Card #}
     {% if sidebar_metrics.upcoming_deadline.name != "None" %}
@@ -37,55 +69,32 @@
             {% if sidebar_metrics.upcoming_deadline.days_until is not none %}
             <div class="countdown">
                 <div class="countdown-number">{{ sidebar_metrics.upcoming_deadline.days_until }}</div>
-                <div class="countdown-label">days</div>
+                <div class="countdown-label">{{ 'day' if sidebar_metrics.upcoming_deadline.days_until == 1 else 'days' }}</div>
             </div>
             {% endif %}
         </div>
     </div>
     {% endif %}
     
-    {# Active Sprint Card #}
-    {% if sidebar_metrics.active_sprint.name != "None" %}
-    <div class="sidebar-card card-info">
-        <div class="card-icon">🏃</div>
+    {# Sprint card: in progress, or the next one. Completed sprints stay hidden. #}
+    {% if sidebar_metrics.active_sprint.status in ["active", "upcoming"] %}
+    <div class="sidebar-card {{ 'card-info' if sidebar_metrics.active_sprint.status == 'active' else 'card-secondary' }}">
+        <div class="card-icon">{{ '🏃' if sidebar_metrics.active_sprint.status == 'active' else '⏳' }}</div>
         <div class="card-content">
-            <h4>ACTIVE SPRINT</h4>
+            <h4>{{ 'ACTIVE SPRINT' if sidebar_metrics.active_sprint.status == 'active' else 'UPCOMING SPRINT' }}</h4>
             <p class="version">{{ sidebar_metrics.active_sprint.name }}</p>
             <p class="date-range">{{ sidebar_metrics.active_sprint.date_range }}</p>
+            {% if sidebar_metrics.active_sprint.status == "active" %}
             <div class="status-badge active">Active</div>
+            {% elif sidebar_metrics.active_sprint.days_until is not none %}
+            <div class="countdown">
+                <div class="countdown-number">{{ sidebar_metrics.active_sprint.days_until }}</div>
+                <div class="countdown-label">{{ 'day' if sidebar_metrics.active_sprint.days_until == 1 else 'days' }}</div>
+            </div>
+            {% endif %}
         </div>
     </div>
     {% endif %}
-    
-    {# Legend #}
-    <div class="legend">
-        <h3 class="legend-title">
-            <span>🗺️</span>
-            LEGEND
-        </h3>
-        <div class="legend-items">
-            <div class="legend-item">
-                <span class="legend-color release"></span>
-                <span class="legend-label">Releases</span>
-            </div>
-            <div class="legend-item">
-                <span class="legend-color deadline"></span>
-                <span class="legend-label">Deadlines</span>
-            </div>
-            <div class="legend-item">
-                <span class="legend-color holiday"></span>
-                <span class="legend-label">Holidays</span>
-            </div>
-            <div class="legend-item">
-                <span class="legend-color sprint"></span>
-                <span class="legend-label">Sprints</span>
-            </div>
-            <div class="legend-item">
-                <span class="legend-color pulse"></span>
-                <span class="legend-label">Pulse (P#)</span>
-            </div>
-        </div>
-    </div>
 </aside>
 
 <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">

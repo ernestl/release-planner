@@ -1,0 +1,276 @@
+# Review of canonical/snapd PR #17044
+
+`seclog, daemon: add security logging for admin actions (part 5)`
+
+Holistic review against a high bar. Inline file:line refs use the PR head.
+
+## Summary
+
+The PR is well-structured: it splits `checkAccess` into a clean
+prerequisites/level pipeline, threads structured `AuthzChecks` and
+`accessLevel` through the access-checker interface, and wires
+`LogAdminActivity`/`LogUnauthorizedAccess` into `Command.ServeHTTP`. Test
+coverage is solid for the new `seclog` types and access plumbing, plus a
+spread test asserting end-to-end audit output. There are however a number of
+correctness, performance and design issues that should be addressed before
+un-drafting.
+
+---
+
+## Significant issues
+
+### 1. `requestAction` runs unconditionally and reads the full body (`daemon/daemon.go:165`, `:258-284`)    <--- FIXED
+
+```go
+rspe, checks, level := access.CheckAccess(c.d, r, ucred, user)
+admin := isAdministrativeAccess(level)
+action := requestAction(r)   // <— always runs
+```
+
+`requestAction` does an `io.ReadAll(io.LimitReader(r.Body, 4MB))` on every
+JSON-bodied POST/PUT, regardless of whether the request will be audited. It
+must be gated on `admin`. As written, every snapctl/snap-side POST that goes
+through `Command.ServeHTTP` now eagerly buffers up to 4 MiB just so the audit
+code path *might* later log it.
+
+Easy fix: only call `requestAction(r)` inside the two `if admin { ... }`
+branches, or skip it when `r.Method`/content-type aren't admin-relevant.
+
+### 2. `requestAction` silently truncates bodies larger than 4 MiB (`daemon/daemon.go:270-275`)
+
+```go
+bodyBytes, err := io.ReadAll(io.LimitReader(r.Body, requestActionMaxBodySize))
+...
+r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+```
+
+`io.LimitReader` returns no error on overflow; it just stops at the cap. The
+remainder of the body is discarded, then the body is replaced with the
+*truncated* buffer that handlers will read from. For any JSON endpoint
+accepting bodies above 4 MiB, this introduces silent corruption that can
+manifest as confusing handler-side decode errors. `byActionAccess`
+deliberately uses `MaxBytesReader` and rejects with `body size limit
+exceeded`; `requestAction` should at minimum detect overflow (read one extra
+byte) and return `""` *without replacing the body*, so the downstream handler
+hits its own limits as before.
+
+Equally, on `io.ReadAll` error the body is replaced with whatever bytes were
+buffered before the error — also a silent corruption. The original (or no
+replacement) is safer.
+
+### 3. Body is parsed up to three times for byAction endpoints
+
+For `POST /v2/interfaces/requests` etc., a single request now flows through:
+
+1. `requestAction` — read 4 MiB, JSON unmarshal `{action}`, restore.
+2. `byActionAccess.CheckAccess` — read with `http.MaxBytesReader`, JSON
+   decode, restore.
+3. `traceSnapdAPI` if `SNAPD_TRACE=1` — read 3 MiB, JSON unmarshal, restore.
+
+Each step buffers the full body in memory. There should be one canonical
+extraction. Stashing the action and restored body on `r.Context()` from the
+first read (or driving everything from `byActionAccess`) would eliminate the
+duplication. At a minimum, `const requestActionMaxBodySize` should be the
+same symbol as `daemon/access.go`'s `maxBodySize` rather than a duplicate
+`// 4MB, matches byActionAccess`.
+
+### 4. Polkit success silently marks `UserAuth = pass` on authenticated level (`daemon/access.go:155-160`)
+
+```go
+checks.Polkit = AuthzPass
+if opts.AccessLevel == accessLevelAuthenticated {
+    // Polkit-as-root does not strictly classify as snapd user
+    // authentication, but for the authenticated access level
+    // we treat it as meeting the authentication requirement.
+    checks.UserAuth = seclog.AuthzPass
+}
+```
+
+This is the wrong call for an audit feature. The whole point of structured
+per-check outcomes is forensic clarity: who passed which gate. Forging
+`UserAuth=pass` when authentication was actually granted by polkit obscures
+exactly what an auditor needs to know. The comment even acknowledges it. The
+existing `AuthzPass` on `Polkit` already conveys "authenticated requirement
+satisfied"; let `UserAuth` honestly reflect `fail`.
+
+### 5. `Peer{}` zero value prints UID as "0" (root) (`seclog/eventdata.go:1659-1677`)
+
+```go
+// Zero UID is root; only the nobody sentinel is unknown.
+if p.UID != peerNobody {
+    uid = fmt.Sprintf("%d", p.UID)
+}
+```
+
+A `Peer` constructed via `Peer{}` (e.g., from a future caller forgetting to
+fill in UID, or test code) will render as `<unknown>:0:<unknown>` — i.e., as
+**root**. In an audit context that is exactly the wrong default.
+`peerFromUcred(nil)` does set `UID: ^uint32(0)` correctly, so today this only
+bites when callers build `Peer` literals directly, but `Peer` is exported and
+the spread test will be the canonical example users copy. Two reasonable
+options:
+
+- Don't export `Peer` field-wise; provide a constructor that requires
+  explicit UID (or `PeerUnknown()`).
+- Treat the all-zero `Peer{}` as fully unknown (since the unix-socket peer
+  with socket="" is itself nonsensical) — print all `<unknown>`.
+
+### 6. `Reason.Code` uses HTTP status numbers (`daemon/daemon.go:301-305`)
+
+```go
+reason := seclog.Reason{
+    Code:    fmt.Sprintf("%d", rspe.Status),
+    Message: rspe.Message,
+}
+```
+
+Login failure events use symbolic constants (`ReasonInvalidCredentials`);
+auth-z events will emit `"code":"401"` / `"403"`. This is inconsistent and
+harder for log consumers to filter on. Either define `ReasonUnauthorized` /
+`ReasonForbidden` symbolic codes, or document that `code` is heterogeneous
+(numeric for HTTP, symbolic elsewhere). Currently the
+`seclog/seclog_test.go:TestLogUnauthorizedAccess` test passes
+`ReasonInvalidCredentials`, which masks the inconsistency at the unit level.
+
+### 7. `accessCheckerLevel` and `accessCheckerName` are parallel maintenance hazards (`daemon/access.go:202-223`, `daemon/daemon.go:201-224`)
+
+Two type-switches over the same closed set of access-checker types, with
+different default branches (`accessLevelRoot` vs `"unknown"`). They will
+silently drift when a new checker is added. Fold both into methods on
+`accessChecker` (`Level() accessLevel`, `Name() string`) and the compiler
+will enforce parity.
+
+The default branch in `accessCheckerLevel` is doubly defensive:
+`byActionAccess.CheckAccess` already rejects non-root defaults with
+`InternalError`, so the "nested byActionAccess" recursion guard at `:214` is
+unreachable in practice. Worth a comment that this matches the runtime
+invariant.
+
+---
+
+## Smaller correctness / clarity issues
+
+### 8. `requestAction` does not handle the closer of the original body
+
+It replaces `r.Body` with a `NopCloser` but never `r.Body.Close()`s the
+original. Subsequent code in `byActionAccess.CheckAccess` calls
+`r.Body.Close()`, which now closes the wrapper — the original body stays
+open until the http server cleans it up. Mostly harmless on AF_UNIX, but
+should at least be acknowledged.
+
+### 9. Test for `requestAction` does not check the body is preserved (`daemon/daemon_test.go:1488-1503`)
+
+The whole point of `requestAction` is "read action, leave body usable for
+handler". Add an assertion that `io.ReadAll(req.Body)` after the call
+returns the original payload. Without it, the silent-truncation bug in issue
+#2 is invisible to unit tests.
+
+### 10. Spread test regex is brittle (`tests/main/security-logging/task.yaml:1964`, `:1975`)
+
+A single regex matching the entire JSON line means any reordering of slog
+group keys (e.g., switching `LogValue` field order, adding a new field to
+`AuthzChecks`) breaks the test in a noisy, hard-to-diagnose way. Prefer
+multiple `journal_match` calls each pinning a single attribute, with the
+event name match anchored separately. Also, the test depends on a `test`
+user existing on the system; if the spread suite doesn't already guarantee
+that, this will be flaky.
+
+### 11. `peer-credentials` and `socket` checks are recorded twice in the structured output
+
+`AuthzChecks.PeerCreds` is `pass` in the spread expectation, but a peer-creds
+failure also fails `Socket` only conditionally. Worth verifying the matrix
+is exhaustive; the test cases in `TestCheckPrerequisites` don't cover the
+case where `len(opts.Sockets) == 0` and `ucred == nil` simultaneously
+(interface-only authz with no sockets — unused today but legal per
+`accessOptions.validate`).
+
+### 12. Async outcome semantics not documented
+
+`logAdminActivity` is emitted *after* `rsp.ServeHTTP(w, r)` returns. For
+change-based async APIs this only attests that the request was authorized
+and accepted, not that the operation succeeded. The PR description should
+call this out, and `LogAdminActivity`'s godoc should make it explicit
+("logs that an admin endpoint was successfully entered, not that the
+requested change completed"). Otherwise consumers will misinterpret the
+event.
+
+### 13. Coverage gaps flagged by codecov
+
+`seclog/slog.go` `LogValue` methods are at 0% direct coverage. They're
+exercised indirectly via `LogAdminActivity` tests, but a small focused test
+asserting each `LogValue()` returns a `slog.GroupValue` with the expected
+attributes would lock behavior down and protect against subtle reorder/rename
+regressions (which the spread regex above silently relies on).
+
+### 14. Comment / wording nits
+
+- `daemon/access.go:81-89`: removing the comment "No interface checks are
+  made if request is coming from snapd.socket to account for the
+  snapd-control interface" loses real domain knowledge. The behavior still
+  exists (inside `requireInterfaceApiAccess`), so port the comment over.
+- `daemon/access.go:117`: "All except the final polkit check returns on
+  success." → grammar; "All checks except the final polkit check return on
+  success."
+- `daemon/access.go:148`: "policy dependant" → "policy dependent".
+- `daemon/access.go:228`: `isAdministrativeAccess` is trivial; consider
+  making it a method on `accessLevel` for symmetry, or inlining.
+- `seclog/eventdata.go:1648-1654`: the duplicated `peerNobody`/
+  `peerNoProcess` constants are reasonable, but add a `// keep in sync with
+  daemon/ucrednet.go:ucrednetNobody` and likewise from the other side.
+- `seclog/eventdata.go:1690-1696` `Endpoint.String`: append-style is fine,
+  but the format `<Method>:<Path>` (no trailing colon) when `Action` is
+  empty differs from the docstring example "<Method>:<Path>:<Action>";
+  clarify the docstring.
+- The `XXX: when to 403 vs 401?` comment is removed without resolving the
+  underlying question. The new logic is the same as before, just with extra
+  commentary; if there's no semantic change, leaving the XXX in (or filing
+  an issue) preserves institutional memory.
+
+### 15. Naming
+
+- `AuthzNotReached` vs `AuthzNotApplicable` is a useful distinction;
+  document explicitly in the godoc on the `AuthzCheck` constants what
+  consumers are supposed to do with each — particularly that `not-reached`
+  means "this gate would have applied, but a prior gate decided".
+- `LogAdminActivity` is fine, but `authz_admin` as the event name reads as
+  "the user *is* an admin" rather than "an admin-gated action occurred".
+  `authz_admin_access` or `admin_action_authorized` would be more
+  self-describing; align with the spec.
+- `accessCheckerLevel` returns the **intended** level; rename to
+  `intendedAccessLevel` or `defaultAccessLevel` to match its docstring.
+
+### 16. Interface signature change
+
+Returning `(*apiError, seclog.AuthzChecks, accessLevel)` from `CheckAccess`
+makes every call site noisy and required adding the `errOnly` helper across
+`access_test.go`. A single struct
+(`type accessResult struct { Err *apiError; Checks seclog.AuthzChecks; Level accessLevel }`)
+would be more ergonomic, easier to extend (next part will likely need more
+fields), and would not have required the test churn. Worth considering
+before this lands as it's invasive to revert.
+
+---
+
+## Things done well
+
+- Clean factoring of `checkAccess` into `checkPrerequisites` +
+  `checkAccessLevelAuthorization`, with the per-stage `AuthzCheck` outcomes
+  thoughtfully tracked via `NotApplicable`/`NotReached`/`Pass`/`Fail`. The
+  semantics are clearly thought through.
+- Comprehensive table-driven unit tests for both new helpers, including the
+  `byActionAccess` dispatch-error path returning the right level.
+- The spread test exercises both success (root over snapd.socket) and
+  failure (unprivileged user over snapd.socket) and asserts on the full
+  structured payload.
+- `LogValue` implementations make the events render as proper structured
+  groups in slog, not stringified blobs.
+- The `peerFromUcred` adapter and the explicit "free of snapd imports"
+  comment on the duplicated sentinels show good package-boundary discipline.
+
+---
+
+## Recommended action before merge
+
+Must-fix: 1, 2, 4, 5.
+Should-fix: 3, 6, 7, 9, 10.
+Nice-to-have: 8, 11–16.
