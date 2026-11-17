@@ -504,6 +504,25 @@ def normalize_deadlines(
     return normalized
 
 
+def normalize_sources(plan: dict[str, Any]) -> list[dict[str, str]]:
+    raw = plan.get("sources", [])
+    if not raw:
+        return []
+    if not isinstance(raw, list):
+        raise ValueError("'sources' must be a list.")
+    sources: list[dict[str, str]] = []
+    for index, item in enumerate(raw, start=1):
+        if not isinstance(item, dict):
+            raise ValueError(f"Source {index} must be an object.")
+        name = str(item.get("name", "")).strip()
+        release = str(item.get("release", "")).strip()
+        url = str(item.get("url", "")).strip()
+        if not name or not url:
+            raise ValueError(f"Source {index} needs a name and a url.")
+        sources.append({"name": name, "release": release, "url": url})
+    return sources
+
+
 def parse_pulse_range(plan: dict[str, Any]) -> tuple[int, int]:
     pulses = plan.get("pulses", {})
     if not isinstance(pulses, dict):
@@ -620,6 +639,7 @@ def build_plan(plan: dict[str, Any]) -> dict[str, Any]:
         "deadlines": deadlines,
         "sprints": sprints,
         "holidays": holidays,
+        "sources": normalize_sources(plan),
         "pulse_range": {
             "start_week": pulse_start_week,
             "end_week": pulse_end_week,
@@ -1530,6 +1550,7 @@ def main() -> None:
         "reference_date": reference_date.isoformat(),
         "generated_at": datetime.now().strftime("%Y-%m-%d"),
         "plan_source": plan,
+        "sources": built_plan["sources"],
     }
     html = render_html(template_file, context)
 

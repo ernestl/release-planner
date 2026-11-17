@@ -95,6 +95,22 @@
         </div>
     </div>
     {% endif %}
+
+    {% if sources %}
+    <div class="sidebar-section">
+        <h3 class="sidebar-heading">Schedule sources</h3>
+        <ul class="source-list">
+            {% for source in sources %}
+            <li>
+                <a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">
+                    <span class="source-name">{{ source.name }}</span>
+                    {% if source.release %}<span class="source-release">{{ source.release }}</span>{% endif %}
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
 </aside>
 
 <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">

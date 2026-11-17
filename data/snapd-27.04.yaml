@@ -105,7 +105,21 @@ releases:
 
 series:
   "26.04": "Resolute"
-  "27.04": "Tenacious"
+  "27.04": "Tanacious"
+
+sources:
+  - name: "Noble"
+    release: "24.04"
+    url: "https://documentation.ubuntu.com/release-notes/24.04/schedule/"
+  - name: "Resolute"
+    release: "26.04"
+    url: "https://documentation.ubuntu.com/release-notes/26.04/schedule/"
+  - name: "Stonking"
+    release: "26.10"
+    url: "https://documentation.ubuntu.com/release-notes/26.10/schedule/"
+  - name: "Tanacious"
+    release: "27.04"
+    url: "https://documentation.ubuntu.com/release-notes/27.04/schedule/"
 
 deadlines:
   - release: "26.04.2"
