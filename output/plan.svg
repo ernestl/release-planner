@@ -1,6 +1,6 @@
 <svg
   class="timeline-svg"
-  width="3216"
+  width="3302"
   height="666"
   xmlns="http://www.w3.org/2000/svg"
   role="img"
@@ -107,8 +107,8 @@
   <rect class="month-cell" x="2676" y="18" width="430" height="38" />
   <text class="month-text" x="2891.0" y="42">May 2027</text>
   
-  <rect class="month-cell" x="3106" y="18" width="86" height="38" />
-  <text class="month-text" x="3149.0" y="42">Jun 2027</text>
+  <rect class="month-cell" x="3106" y="18" width="172" height="38" />
+  <text class="month-text" x="3192.0" y="42">Jun 2027</text>
   
 
   
@@ -252,6 +252,10 @@
   <text class="week-text week-text-top" x="3149.0" y="72"></text>
   <text class="week-text" x="3111" y="87">07-06 to 13-06</text>
   
+  <rect class="week-cell" x="3192" y="56" width="86" height="44" />
+  <text class="week-text week-text-top" x="3235.0" y="72"></text>
+  <text class="week-text" x="3197" y="87">14-06 to 20-06</text>
+  
 
   
   <rect class="pulse-cell" x="182" y="100" width="172" height="40" />
@@ -305,8 +309,8 @@
   <rect class="pulse-cell" x="2934" y="100" width="172" height="40" />
   <text class="pulse-text" x="3020.0" y="121.0">P11</text>
   
-  <rect class="pulse-cell" x="3106" y="100" width="86" height="40" />
-  <text class="pulse-text" x="3149.0" y="121.0">P12</text>
+  <rect class="pulse-cell" x="3106" y="100" width="172" height="40" />
+  <text class="pulse-text" x="3192.0" y="121.0">P12</text>
   
 
   
@@ -314,7 +318,7 @@
     class="lane-band"
     x="182"
     y="154"
-    width="3010"
+    width="3096"
     height="150"
     rx="8"
   />
@@ -390,6 +394,8 @@
   <line class="week-divider" x1="3020" y1="154" x2="3020" y2="304" />
   
   <line class="week-divider" x1="3106" y1="154" x2="3106" y2="304" />
+  
+  <line class="week-divider" x1="3192" y1="154" x2="3192" y2="304" />
   
 
   
@@ -660,7 +666,7 @@
   
   <rect
     class="item release"
-    x="2762.0"
+    x="2848.0"
     y="164"
     width="344.0"
     height="38"
@@ -669,20 +675,20 @@
     style="fill: #b45309; stroke: #92400e;"
     
   >
-    <title>2.83 release: 27.04 carry-over content: 2027-05-10 to 2027-06-06</title>
+    <title>2.83 release: 27.04 carry-over content: 2027-05-17 to 2027-06-13</title>
   </rect>
   
 
   
-  <text class="item-label-inside item-label-centered" x="2934.0" y="180">2.83 release: 27.04 carry-over content</text>
+  <text class="item-label-inside item-label-centered" x="3020.0" y="180">2.83 release: 27.04 carry-over content</text>
   
-  <text class="item-label-inside item-label-centered" x="2934.0" y="194">10-05 to 06-06</text>
+  <text class="item-label-inside item-label-centered" x="3020.0" y="194">17-05 to 13-06</text>
   
   
   
   <rect
     class="item release"
-    x="2848.0"
+    x="2934.0"
     y="210"
     width="258.0"
     height="38"
@@ -691,20 +697,20 @@
     style="fill: #c06f30; stroke: #a35f35;"
     
   >
-    <title>2.83.1 release: bugfix: 2027-05-17 to 2027-06-06</title>
+    <title>2.83.1 release: bugfix: 2027-05-24 to 2027-06-13</title>
   </rect>
   
 
   
-  <text class="item-label-inside item-label-centered" x="2977.0" y="226">2.83.1 release: bugfix</text>
+  <text class="item-label-inside item-label-centered" x="3063.0" y="226">2.83.1 release: bugfix</text>
   
-  <text class="item-label-inside item-label-centered" x="2977.0" y="240">17-05 to 06-06</text>
+  <text class="item-label-inside item-label-centered" x="3063.0" y="240">24-05 to 13-06</text>
   
   
   
   <rect
     class="item release"
-    x="2934.0"
+    x="3020.0"
     y="256"
     width="258.0"
     height="38"
@@ -713,14 +719,14 @@
     style="fill: #cc8a58; stroke: #b57d5b;"
     
   >
-    <title>2.83.2 release: security: 2027-05-24 to 2027-06-13</title>
+    <title>2.83.2 release: security: 2027-05-31 to 2027-06-20</title>
   </rect>
   
 
   
-  <text class="item-label-inside item-label-centered" x="3063.0" y="272">2.83.2 release: security</text>
+  <text class="item-label-inside item-label-centered" x="3149.0" y="272">2.83.2 release: security</text>
   
-  <text class="item-label-inside item-label-centered" x="3063.0" y="286">24-05 to 13-06</text>
+  <text class="item-label-inside item-label-centered" x="3149.0" y="286">31-05 to 20-06</text>
   
   
   
@@ -728,7 +734,7 @@
     class="lane-band"
     x="182"
     y="316"
-    width="3010"
+    width="3096"
     height="196"
     rx="8"
   />
@@ -804,6 +810,8 @@
   <line class="week-divider" x1="3020" y1="316" x2="3020" y2="512" />
   
   <line class="week-divider" x1="3106" y1="316" x2="3106" y2="512" />
+  
+  <line class="week-divider" x1="3192" y1="316" x2="3192" y2="512" />
   
 
   
@@ -888,7 +896,7 @@
     class="lane-band"
     x="182"
     y="524"
-    width="3010"
+    width="3096"
     height="58"
     rx="8"
   />
@@ -965,6 +973,8 @@
   
   <line class="week-divider" x1="3106" y1="524" x2="3106" y2="582" />
   
+  <line class="week-divider" x1="3192" y1="524" x2="3192" y2="582" />
+  
 
   
   
@@ -992,7 +1002,7 @@
     class="lane-band"
     x="182"
     y="594"
-    width="3010"
+    width="3096"
     height="58"
     rx="8"
   />
@@ -1068,6 +1078,8 @@
   <line class="week-divider" x1="3020" y1="594" x2="3020" y2="652" />
   
   <line class="week-divider" x1="3106" y1="594" x2="3106" y2="652" />
+  
+  <line class="week-divider" x1="3192" y1="594" x2="3192" y2="652" />
   
 
   

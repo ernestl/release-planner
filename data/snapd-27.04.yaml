@@ -8,7 +8,7 @@ window:
   start: "2026-10-19"
   end: "2027-04-23"
   pad_before_weeks: 1
-  pad_after_weeks: 7
+  pad_after_weeks: 8
 
 timeline:
   resolution: week
@@ -91,7 +91,7 @@ releases:
   - name: "2.83"
     purpose: "27.04 carry-over content"
     kind: "by-week"
-    offset: 4
+    offset: 5
     duration: 4
   - name: "2.83.1"
     purpose: "bugfix"
