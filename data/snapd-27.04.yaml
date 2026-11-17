@@ -8,7 +8,7 @@ window:
   start: "2026-10-19"
   end: "2027-04-23"
   pad_before_weeks: 1
-  pad_after_weeks: 5
+  pad_after_weeks: 7
 
 timeline:
   resolution: week
@@ -58,7 +58,7 @@ releases:
   - name: "2.81"
     purpose: "27.04 installer content"
     kind: "by-week"
-    offset: 3
+    offset: 4
     duration: 4
     links_to: "27.04: beta freeze"
   - name: "2.81.1"
@@ -75,7 +75,7 @@ releases:
   - name: "2.82"
     purpose: "27.04 update content"
     kind: "by-week"
-    offset: 3
+    offset: 4
     duration: 4
   - name: "2.82.1"
     purpose: "bugfix"
@@ -89,8 +89,9 @@ releases:
     duration: 3
 
   - name: "2.83"
+    purpose: "27.04 carry-over content"
     kind: "by-week"
-    offset: 3
+    offset: 4
     duration: 4
   - name: "2.83.1"
     purpose: "bugfix"
